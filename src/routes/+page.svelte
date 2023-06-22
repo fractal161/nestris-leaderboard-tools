@@ -5,6 +5,11 @@
   let scrollLeft: number;
   let scrollTop: number;
 
+  const fetchData = async (index: number): Promise<string> => {
+    const res = await fetch(`/sheet?index=${index}`);
+    return await res.text();
+  };
+
   const setScroll = () => {
     if (left.scrollTop !== scrollTop) {
       scrollTop = left.scrollTop;
@@ -28,7 +33,13 @@
 
 <div id=layout>
   <div class=left-title>
-    <h2>{index}</h2>
+    {#await fetchData(index)}
+      <h2>loading</h2>
+    {:then text}
+      <h2>{text}</h2>
+    {:catch}
+      <h2>File not found</h2>
+    {/await}
   </div>
 
   <div class=right-title>
@@ -73,8 +84,8 @@
   </div>
   <div id=scrollbar>
     <button class=scroll-button on:click={() => { index = Math.max(0, index-1) }}>-</button>
-    <input type=range min=1 max=100 bind:value={index}>
-    <button class=scroll-button on:click={() => { index = Math.min(100, index+1) }}>+</button>
+    <input type=range min=1 max=11 bind:value={index}>
+    <button class=scroll-button on:click={() => { index = Math.min(11, index+1) }}>+</button>
   </div>
   <div id=sidebar>
     Unsure of what to put here
@@ -112,9 +123,11 @@
   }
   .left-title {
     grid-area: left-title;
+    overflow: auto;
   }
   .right-title {
     grid-area: right-title;
+    overflow: auto;
   }
   .left {
     grid-area: left;

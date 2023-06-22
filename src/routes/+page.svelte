@@ -1,5 +1,10 @@
+<script>
+  export let index = 1;
+</script>
+
 <div id=layout>
   <div id=left>
+    <h2>{index}</h2>
     <table>
       <thead>
         <tr>
@@ -18,6 +23,7 @@
     </table>
   </div>
   <div id=right>
+    <h2>{index+1}</h2>
     <table>
       <thead>
         <tr>
@@ -35,7 +41,7 @@
       </tbody>
     </table>
   </div>
-  <input type=range min=1 max=10 value=1>
+  <input type=range min=1 max=10 bind:value={index}>
   <div id=sidebar>
   </div>
 </div>

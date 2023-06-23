@@ -1,14 +1,32 @@
 <script lang="ts">
+  import Sheet from "./Sheet.svelte";
   let index = 1;
   let left: Element;
   let right: Element;
   let scrollLeft: number;
   let scrollTop: number;
+  let scrollHead: string;
 
-  const fetchData = async (index: number): Promise<string> => {
+  let leftSheetProps = {
+    headers: [ "RANK", "NAME" ],
+    entries: [
+      [ "test", "test", "test", "test" ]
+    ],
+  }
+
+  let rightSheetProps = {
+    headers: [ "RANK", "NAME" ],
+    entries: [
+      [ "test", "test", "test", "test" ]
+    ],
+  }
+
+  const fetchData = async (index: number): Promise<void> => {
+    console.log(index);
     const res = await fetch(`/sheet?index=${index}`);
-    return await res.text();
+    scrollHead = await res.text();
   };
+
 
   const setScroll = () => {
     if (left.scrollTop !== scrollTop) {
@@ -34,9 +52,9 @@
 <div id=layout>
   <div class=left-title>
     {#await fetchData(index)}
-      <h2>loading</h2>
-    {:then text}
-      <h2>{text}</h2>
+      <h2>{scrollHead}</h2>
+    {:then}
+      <h2>{scrollHead}</h2>
     {:catch}
       <h2>File not found</h2>
     {/await}
@@ -47,40 +65,10 @@
   </div>
 
   <div class=left bind:this={left} on:scroll={setScroll}>
-    <table>
-      <thead>
-        <tr>
-          <th>RANK</th>
-          <th>NAME</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>test</td>
-          <td>test</td>
-          <td>test</td>
-          <td>test</td>
-        </tr>
-      </tbody>
-    </table>
+    <Sheet {...leftSheetProps} />
   </div>
-  <div class=right bind:this={right}>
-    <table>
-      <thead>
-        <tr>
-          <th>RANK</th>
-          <th>NAME</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>test</td>
-          <td>test</td>
-          <td>test</td>
-          <td>test</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class=right bind:this={right} on:scroll={setScroll}>
+    <Sheet {...rightSheetProps} />
   </div>
   <div id=scrollbar>
     <button class=scroll-button on:click={() => { index = Math.max(0, index-1) }}>-</button>

@@ -22,6 +22,9 @@
     entries: [[]],
   };
 
+  // TODO: probably breaks when a cell is undefined on one side
+  let selected: [number, number] | undefined = undefined;
+
   let left: SheetView;
   let right: SheetView;
 
@@ -48,6 +51,7 @@
     bind:this={left}
     bind:scrollTop={scrollTop}
     bind:scrollLeft={scrollLeft}
+    bind:selected={selected}
     on:scroll={setScroll}
   />
 
@@ -57,6 +61,7 @@
     bind:this={right}
     bind:scrollTop={scrollTop}
     bind:scrollLeft={scrollLeft}
+    bind:selected={selected}
     on:scroll={setScroll}
   />
 </div>

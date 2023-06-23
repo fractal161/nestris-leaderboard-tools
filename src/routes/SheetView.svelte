@@ -5,6 +5,7 @@
   export let entries: Array<Array<string>>;
   export let scrollTop = 0;
   export let scrollLeft = 0;
+  export let selected: [number, number] | undefined = undefined;
   let main: HTMLDivElement;
   const setScroll = () => {
     if (main === undefined) return;
@@ -18,7 +19,7 @@
 </script>
 
 <div bind:this={main} on:scroll>
-  <Sheet headers={headers} entries={entries} />
+  <Sheet headers={headers} entries={entries} bind:selected={selected}/>
 </div>
 
 <style>

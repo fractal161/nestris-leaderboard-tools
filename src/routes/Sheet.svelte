@@ -23,24 +23,29 @@
     height: 0,
   };
   let selectorStyle: string;
-  $: selector, selectorStyle = `left: ${selector.left}px;
-    top: ${selector.top}px;
-    width: ${selector.width}px;
-    height: ${selector.height}px`;
-  const updateSelector = (i: number, j: number): void => {
-    if (selected !== undefined && selected[0] === i && selected[1] === j) {
-      selected = undefined;
-    }
-    else {
-      selected = [i, j];
+  const updateSelectorStyle = (): void => {
+      if (selected === undefined) return;
+      const [i, j] = selected;
       let cell = cells[i][j];
       console.assert(cell !== undefined);
       selector.top = cell.offsetTop-1;
       selector.left = cell.offsetLeft-1;
       selector.width = cell.offsetWidth-2;
       selector.height = cell.offsetHeight-2;
+      selectorStyle = `left: ${selector.left}px;
+        top: ${selector.top}px; width: ${selector.width}px;
+        height: ${selector.height}px`;
+  }
+  const updateSelector = (i: number, j: number): void => {
+    if (selected !== undefined && selected[0] === i && selected[1] === j) {
+      selected = undefined;
+    }
+    else {
+      selected = [i, j];
+      updateSelectorStyle();
     }
   }
+  $: selected, updateSelectorStyle();
 </script>
 
 <div class="wrapper">

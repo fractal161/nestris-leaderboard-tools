@@ -5,7 +5,9 @@
   let right: SheetView;
   let scrollLeft: number;
   let scrollTop: number;
-  let scrollHead: string;
+  let leftHead: string;
+  let inTimeout = false;
+  let nextIndex: number | undefined = undefined;
 
   let leftSheetProps = {
     headers: [ "RANK", "NAME" ],
@@ -21,10 +23,20 @@
     ],
   }
 
-  const fetchData = async (index: number): Promise<void> => {
-    console.log(index);
+  const fetchData = async (index: number | undefined): Promise<void> => {
+    if (index === undefined) return;
+    if (inTimeout) {
+      nextIndex = index;
+      return;
+    }
+    inTimeout = true;
+    nextIndex = undefined;
+    setTimeout(() => {
+      inTimeout = false;
+      fetchData(nextIndex);
+    }, 200);
     const res = await fetch(`/sheet?index=${index}`);
-    scrollHead = await res.text();
+    leftHead = await res.text();
   };
 
 
@@ -39,9 +51,9 @@
 <div id=layout>
   <div class=left-title>
     {#await fetchData(index)}
-      <h2>{scrollHead}</h2>
+      <h2>{leftHead}</h2>
     {:then}
-      <h2>{scrollHead}</h2>
+      <h2>{leftHead}</h2>
     {:catch}
       <h2>File not found</h2>
     {/await}
@@ -67,9 +79,9 @@
   />
 
   <div id=scrollbar>
-    <button class=scroll-button on:click={() => { index = Math.max(0, index-1) }}>-</button>
-    <input type=range min=1 max=11 bind:value={index}>
-    <button class=scroll-button on:click={() => { index = Math.min(11, index+1) }}>+</button>
+    <button class=scroll-button on:click={() => { index = Math.max(1, index-1) }}>-</button>
+    <input type=range min=1 max=10 bind:value={index}>
+    <button class=scroll-button on:click={() => { index = Math.min(10, index+1) }}>+</button>
   </div>
 
   <div id=sidebar>

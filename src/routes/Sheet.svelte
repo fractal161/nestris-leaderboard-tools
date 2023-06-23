@@ -2,6 +2,8 @@
   Contains a table and supports the following features:
     - one cell is able to be marked as unselected
     - colors of each cell can be set (to show differing files)
+  TODO: currently selection logic is super inefficient because it literally checks all
+  cells instead of just the one or two that matter.
 -->
 
 <script lang="ts">

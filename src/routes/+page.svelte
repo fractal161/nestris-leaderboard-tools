@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Sheet from "./Sheet.svelte";
+  import SheetView from "./SheetView.svelte";
   let index = 1;
-  let left: Element;
-  let right: Element;
+  let left: SheetView;
+  let right: SheetView;
   let scrollLeft: number;
   let scrollTop: number;
   let scrollHead: string;
@@ -28,23 +28,10 @@
   };
 
 
-  const setScroll = () => {
-    if (left.scrollTop !== scrollTop) {
-      scrollTop = left.scrollTop;
-      right.scrollTop = scrollTop;
-    }
-    else {
-      scrollTop = right.scrollTop;
-      left.scrollTop = scrollTop;
-    }
-
-    if (left.scrollLeft !== scrollLeft) {
-      scrollLeft = left.scrollLeft;
-      right.scrollLeft = scrollLeft;
-    }
-    else {
-      scrollLeft = right.scrollLeft;
-      left.scrollLeft = scrollLeft;
+  const setScroll = (e: Event) => {
+    if (e.target instanceof Element) {
+      scrollTop = e.target.scrollTop;
+      scrollLeft = e.target.scrollLeft;
     }
   };
 </script>
@@ -64,17 +51,27 @@
     <h2>{index+1}</h2>
   </div>
 
-  <div class=left bind:this={left} on:scroll={setScroll}>
-    <Sheet {...leftSheetProps} />
-  </div>
-  <div class=right bind:this={right} on:scroll={setScroll}>
-    <Sheet {...rightSheetProps} />
-  </div>
+  <SheetView
+    {...leftSheetProps}
+    bind:this={left}
+    bind:scrollTop={scrollTop}
+    bind:scrollLeft={scrollLeft}
+    on:scroll={setScroll}
+  />
+  <SheetView
+    {...rightSheetProps}
+    bind:this={right}
+    bind:scrollTop={scrollTop}
+    bind:scrollLeft={scrollLeft}
+    on:scroll={setScroll}
+  />
+
   <div id=scrollbar>
     <button class=scroll-button on:click={() => { index = Math.max(0, index-1) }}>-</button>
     <input type=range min=1 max=11 bind:value={index}>
     <button class=scroll-button on:click={() => { index = Math.min(11, index+1) }}>+</button>
   </div>
+
   <div id=sidebar>
     Unsure of what to put here
   </div>
@@ -117,14 +114,6 @@
     grid-area: right-title;
     overflow: auto;
   }
-  .left {
-    grid-area: left;
-    overflow: auto;
-  }
-  .right {
-    grid-area: right;
-    overflow: auto;
-  }
   #sidebar {
     grid-area: side;
     border: 1px solid blue;
@@ -132,12 +121,6 @@
   :global(body) {
     margin: 0;
     padding: 0;
-  }
-  table {
-    border-collapse: collapse;
-  }
-  td, th {
-    border: 1px solid gray;
   }
   .scroll-button {
     margin: 3px;

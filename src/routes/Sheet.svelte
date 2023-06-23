@@ -52,6 +52,7 @@
   }
   td, th {
     border: 1px solid gray;
+    user-select: none;
   }
   .selected {
     border: 2px solid blue;

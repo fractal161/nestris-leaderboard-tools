@@ -1,22 +1,20 @@
 <script lang="ts">
-  import SheetView from "./SheetView.svelte";
+  import DualView from "./DualView.svelte";
+  import { beforeUpdate } from "svelte";
   let index = 1;
-  let left: SheetView;
-  let right: SheetView;
-  let scrollLeft: number;
-  let scrollTop: number;
-  let leftHead: string;
   let inTimeout = false;
   let nextIndex: number | undefined = undefined;
 
-  let leftSheetProps = {
+  let leftProps = {
+    title: "",
     headers: [ "RANK", "NAME" ],
     entries: [
       [ "test", "test", "test", "test" ]
     ],
   }
 
-  let rightSheetProps = {
+  let rightProps = {
+    title: (index + 1).toString(),
     headers: [ "RANK", "NAME" ],
     entries: [
       [ "test", "test", "test", "test" ]
@@ -36,46 +34,19 @@
       fetchData(nextIndex);
     }, 200);
     const res = await fetch(`/sheet?index=${index}`);
-    leftHead = await res.text();
+    leftProps.title = await res.text();
   };
 
-
-  const setScroll = (e: Event) => {
-    if (e.target instanceof Element) {
-      scrollTop = e.target.scrollTop;
-      scrollLeft = e.target.scrollLeft;
-    }
-  };
+  beforeUpdate(async () => {
+    await fetchData(index);
+  });
 </script>
 
 <div id=layout>
-  <div class=left-title>
-    {#await fetchData(index)}
-      <h2>{leftHead}</h2>
-    {:then}
-      <h2>{leftHead}</h2>
-    {:catch}
-      <h2>File not found</h2>
-    {/await}
-  </div>
 
-  <div class=right-title>
-    <h2>{index+1}</h2>
-  </div>
-
-  <SheetView
-    {...leftSheetProps}
-    bind:this={left}
-    bind:scrollTop={scrollTop}
-    bind:scrollLeft={scrollLeft}
-    on:scroll={setScroll}
-  />
-  <SheetView
-    {...rightSheetProps}
-    bind:this={right}
-    bind:scrollTop={scrollTop}
-    bind:scrollLeft={scrollLeft}
-    on:scroll={setScroll}
+  <DualView
+    leftProps={leftProps}
+    rightProps={rightProps}
   />
 
   <div id=scrollbar>
@@ -95,12 +66,11 @@
     height: 100vh;
     width: 100vw;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    grid-template-columns: 1fr 1fr 25%;
+    grid-template-rows: 1fr auto;
+    grid-template-columns: 1fr 25%;
     grid-template-areas:
-      "left-title right-title side"
-      "left right side"
-      "slider slider side";
+      "view side"
+      "slider side";
     font-family: monospace;
   }
   div {
@@ -118,14 +88,6 @@
     display: flex;
     flex-direction: row;
   }
-  .left-title {
-    grid-area: left-title;
-    overflow: auto;
-  }
-  .right-title {
-    grid-area: right-title;
-    overflow: auto;
-  }
   #sidebar {
     grid-area: side;
     border: 1px solid blue;
@@ -136,8 +98,5 @@
   }
   .scroll-button {
     margin: 3px;
-  }
-  h2 {
-    margin: 2px;
   }
 </style>

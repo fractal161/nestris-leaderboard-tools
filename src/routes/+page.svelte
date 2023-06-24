@@ -2,7 +2,7 @@
   import DualView from "./DualView.svelte";
   import { beforeUpdate } from "svelte";
   let index = 30000;
-  let inTimeout = false;
+  let fetching = false;
   let nextIndex: number | undefined = undefined;
 
   let leftProps = {
@@ -28,21 +28,19 @@
 
   const fetchData = async (index: number | undefined): Promise<void> => {
     if (index === undefined) return;
-    if (inTimeout) {
+    if (fetching) {
       nextIndex = index;
       return;
     }
-    inTimeout = true;
+    fetching = true;
     nextIndex = undefined;
-    setTimeout(() => {
-      inTimeout = false;
-      fetchData(nextIndex);
-    }, 200);
     const leftEntries = await (await fetch(`/sheet?index=${index}`)).json();
     leftProps.title = index.toString();
     leftProps.headers = leftEntries[0];
     leftProps.entries = leftEntries.slice(1);
     leftProps.key = index.toString();
+    fetching = false;
+    fetchData(nextIndex);
     // leftProps.title = await res.text();
   };
 

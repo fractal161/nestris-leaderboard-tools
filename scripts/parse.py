@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup, SoupStrainer
 import gzip
 import json
-import cchardet
-import lxml
+import csv
 import re
 import sys
 import cProfile
@@ -70,5 +69,31 @@ def get_table():
             with open(f'stripped/rev-{i}-stripped.html', 'w') as g:
                 g.write(str(table))
 
-get_table()
-#cProfile.run('get_table()', 'app.profile')
+def get_csv():
+    only_table = SoupStrainer('table')
+    #for i in range(1000, 1011):
+    for i in range(9999, 10000):
+        print('parsing revision', i)
+        with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
+            content = gzip.decompress(f.read())
+            # try getting rid of fluff
+            content = re.sub(b' tabindex="-1"', b'', content)
+            content = re.sub(rb'(<td [^>]*?></td>)*</tr>', b'</tr>', content)
+            #content = re.sub(rb'<td .*?>', b'<td>', content)
+            #content = re.sub(rb'(<tr></td>)*</tr>', b'</tr>', content)
+            content = re.sub(rb'th .*?>', b'th>', content)
+            content = re.sub(b' class=".*?"', b'', content)
+            content = re.sub(b' style=".*?"', b'', content)
+            content = re.sub(rb'(<tr><th><div>\d*</div></th></tr>)*</tbody>', b'</tbody>', content)
+            parser = BeautifulSoup(content, 'lxml', parse_only=only_table)
+            table = parser.table
+            assert(table != None)
+            with open(f'data/score-csv/rev-{i}.csv', 'w') as g:
+                writer = csv.writer(g)
+                writer.writerows([
+                    [td.text for td in row.find_all("td")]
+                    for row in table.tbody.select("tr")
+                ])
+
+#get_csv()
+cProfile.run('get_csv()', 'app.profile')

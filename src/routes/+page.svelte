@@ -11,6 +11,7 @@
     entries: [
       [ "test", "test", "test", "test" ]
     ],
+    key: "",
   }
   for (let i = 0; i < 200; i++) {
     leftProps.entries.push([ "test", "test" ]);
@@ -22,6 +23,7 @@
     entries: [
       [ "test", "test", "test", "test" ]
     ],
+    key: "",
   }
 
   const fetchData = async (index: number | undefined): Promise<void> => {
@@ -37,8 +39,10 @@
       fetchData(nextIndex);
     }, 200);
     const leftEntries = await (await fetch(`/sheet?index=${index}`)).json();
+    leftProps.title = index.toString();
     leftProps.headers = leftEntries[0];
     leftProps.entries = leftEntries.slice(1);
+    leftProps.key = index.toString();
     // leftProps.title = await res.text();
   };
 

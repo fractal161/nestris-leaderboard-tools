@@ -6,20 +6,24 @@
     title: string,
     headers: Array<string>,
     entries: Array<Array<string>>,
+    key?: string,
   } = {
     title: "",
     headers: [],
     entries: [[]],
+    key: ""
   };
 
   export let rightProps: {
     title: string,
     headers: Array<string>,
     entries: Array<Array<string>>,
+    key?: string,
   } = {
     title: "",
     headers: [],
     entries: [[]],
+    key: ""
   };
 
   // TODO: probably breaks when a cell is undefined on one side
@@ -45,25 +49,29 @@
     <h2>{rightProps.title}</h2>
   </div>
 
-  <SheetView
-    headers={leftProps.headers}
-    entries={leftProps.entries}
-    bind:this={left}
-    bind:scrollTop={scrollTop}
-    bind:scrollLeft={scrollLeft}
-    bind:selected={selected}
-    on:scroll={setScroll}
-  />
+  {#key leftProps.key}
+    <SheetView
+      headers={leftProps.headers}
+      entries={leftProps.entries}
+      bind:this={left}
+      bind:scrollTop={scrollTop}
+      bind:scrollLeft={scrollLeft}
+      bind:selected={selected}
+      on:scroll={setScroll}
+    />
+  {/key}
 
-  <SheetView
-    headers={rightProps.headers}
-    entries={rightProps.entries}
-    bind:this={right}
-    bind:scrollTop={scrollTop}
-    bind:scrollLeft={scrollLeft}
-    bind:selected={selected}
-    on:scroll={setScroll}
-  />
+  {#key rightProps.key}
+    <SheetView
+      headers={rightProps.headers}
+      entries={rightProps.entries}
+      bind:this={right}
+      bind:scrollTop={scrollTop}
+      bind:scrollLeft={scrollLeft}
+      bind:selected={selected}
+      on:scroll={setScroll}
+    />
+  {/key}
 </div>
 
 <style>

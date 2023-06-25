@@ -7,6 +7,7 @@ from collections import OrderedDict
 import re
 import sys
 import tqdm
+from urllib.parse import unquote
 import cProfile
 
 def get_spreadsheet_history():
@@ -66,14 +67,14 @@ def get_spreadsheet_history():
         json.dump(sheet_history, f, indent=2)
 
 
-def get_all_csvs():
+def write_all_csvs():
     pool = Pool()
     MAX = 39067
     MIN = 853
-    for _ in tqdm.tqdm(pool.imap_unordered(get_csv, range(MIN, MAX)), total=MAX-MIN):
+    for _ in tqdm.tqdm(pool.imap_unordered(write_csv, range(MIN, MAX)), total=MAX-MIN):
         pass
 
-def get_csv(i):
+def write_csv(i):
     with open(f'data/raws/1078039113/{i}.html.gz', 'rb') as f:
         content = gzip.decompress(f.read())
         # try getting rid of fluff
@@ -89,15 +90,38 @@ def get_csv(i):
         #content = re.sub(b' style=".*?"', b'', content)
         #content = re.sub(rb'(<tr><th><div>\d*</div></th></tr>)*</tbody>', b'</tbody>', content)
         tree = lxml.html.fromstring(content)
-        table = tree.xpath('//table')[0]
+        table = tree.find('.//table/tbody')
         assert(table != None)
         with open(f'data/revs/1078039113/{i}.csv', 'w') as g:
             writer = csv.writer(g)
             writer.writerows([
-                [td.text or '' for td in row.iter(tag='td')]
-                #row.itertext(tag='td')
-                for row in table.xpath('./tbody/tr')
+                [e for t in [get_csv_entry(td, i) for td in row.iter(tag='td')] for e in t]
+                for row in table.iter(tag='tr')
             ])
+
+def get_csv_entry(tag, i):
+    text = ''
+    span = None
+    if 'colspan' in tag.attrib:
+        span = int(tag.attrib['colspan'])
+    for child in tag.iter():
+        if child.tag == 'a':
+            url = child.attrib['href']
+            url = re.sub(r'^https://www.google.com/url\?q=', '', url)
+            url = re.sub('&sa=D&.*', '', url)
+            text = unquote(url)
+            break
+        elif child.tag == tag.tag:
+            text += child.text or ''
+        else:
+            text +=  get_csv_entry(child, i)
+            if child.tag != 'div':
+                print(child.tag)
+    if span:
+        return (text or '' for _ in range(span))
+    elif tag.tag == 'td':
+        return (text,)
+    return text or ''
 
 #cProfile.run('get_csv()', 'app.profile')
 #get_all_csvs()

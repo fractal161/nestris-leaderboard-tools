@@ -1,16 +1,18 @@
-from bs4 import BeautifulSoup, SoupStrainer
+import lxml.html
 import gzip
 import json
 import csv
+from multiprocessing import Pool
 import re
 import sys
+import tqdm
 import cProfile
 
 def track_spreadsheets():
     sheets = dict()
 
     for i in range(1, 34000):
-        with open(f'data/rev-{i}.html.gz', 'rb') as f:
+        with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
             content = str(gzip.decompress(f.read()), encoding='utf-8')
             script_start = content.rfind('<script')
             script_end = content.rfind('</script>')
@@ -47,53 +49,39 @@ def track_spreadsheets():
                 print(f'REV {i}: removed {(sheet_id, sheets[sheet_id])}')
                 del sheets[sheet_id]
 
+def get_all_csvs():
+    pool = Pool()
+    MAX = 39067
+    MIN = 853
+    for _ in tqdm.tqdm(pool.imap_unordered(get_csv, range(MIN, MAX)), total=MAX-MIN):
+        pass
 
-def get_table():
-    only_table = SoupStrainer('table')
-    for i in range(33999, 34000):
-        print('parsing revision', i)
-        with open(f'data/rev-{i}.html.gz', 'rb') as f:
-            content = gzip.decompress(f.read())
-            # try getting rid of fluff
-            content = re.sub(b' tabindex="-1"', b'', content)
-            content = re.sub(rb'(<td [^>]*?></td>)*</tr>', b'</tr>', content)
-            #content = re.sub(rb'<td .*?>', b'<td>', content)
-            #content = re.sub(rb'(<tr></td>)*</tr>', b'</tr>', content)
-            content = re.sub(rb'th .*?>', b'th>', content)
-            content = re.sub(b' class=".*?"', b'', content)
-            content = re.sub(b' style=".*?"', b'', content)
-            content = re.sub(rb'(<tr><th><div>\d*</div></th></tr>)*</tbody>', b'</tbody>', content)
-            parser = BeautifulSoup(content, 'lxml', parse_only=only_table)
-            table = parser.table
-            assert(table != None)
-            with open(f'stripped/rev-{i}-stripped.html', 'w') as g:
-                g.write(str(table))
+def get_csv(i):
+    with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
+        content = gzip.decompress(f.read())
+        # try getting rid of fluff
+        content = re.sub(b' tabindex="-1"', b'', content)
+        content = re.sub(b' dir="ltr"', b'', content)
+        content = re.sub(b' class="s\\d+"', b'', content)
+        content = re.sub(b' style="height: 20px;"', b'', content)
+        #content = re.sub(rb'(<td [^>]*?></td>)*</tr>', b'</tr>', content)
+        ##content = re.sub(rb'<td .*?>', b'<td>', content)
+        #content = re.sub(rb'(<tr></td>)*</tr>', b'</tr>', content)
+        #content = re.sub(rb'th .*?>', b'th>', content)
+        #content = re.sub(b' class=".*?"', b'', content)
+        #content = re.sub(b' style=".*?"', b'', content)
+        #content = re.sub(rb'(<tr><th><div>\d*</div></th></tr>)*</tbody>', b'</tbody>', content)
+        tree = lxml.html.fromstring(content)
+        table = tree.xpath('//table')[0]
+        assert(table != None)
+        with open(f'data/score-csv/rev-{i}.csv', 'w') as g:
+            writer = csv.writer(g)
+            writer.writerows([
+                [td.text or '' for td in row.iter(tag='td')]
+                #row.itertext(tag='td')
+                for row in table.xpath('./tbody/tr')
+            ])
 
-def get_csv():
-    only_table = SoupStrainer('table')
-    #for i in range(1000, 1011):
-    for i in range(9999, 10000):
-        print('parsing revision', i)
-        with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
-            content = gzip.decompress(f.read())
-            # try getting rid of fluff
-            content = re.sub(b' tabindex="-1"', b'', content)
-            content = re.sub(rb'(<td [^>]*?></td>)*</tr>', b'</tr>', content)
-            #content = re.sub(rb'<td .*?>', b'<td>', content)
-            #content = re.sub(rb'(<tr></td>)*</tr>', b'</tr>', content)
-            content = re.sub(rb'th .*?>', b'th>', content)
-            content = re.sub(b' class=".*?"', b'', content)
-            content = re.sub(b' style=".*?"', b'', content)
-            content = re.sub(rb'(<tr><th><div>\d*</div></th></tr>)*</tbody>', b'</tbody>', content)
-            parser = BeautifulSoup(content, 'lxml', parse_only=only_table)
-            table = parser.table
-            assert(table != None)
-            with open(f'data/score-csv/rev-{i}.csv', 'w') as g:
-                writer = csv.writer(g)
-                writer.writerows([
-                    [td.text for td in row.find_all("td")]
-                    for row in table.tbody.select("tr")
-                ])
-
-#get_csv()
-cProfile.run('get_csv()', 'app.profile')
+#cProfile.run('get_csv()', 'app.profile')
+get_all_csvs()
+#track_spreadsheets()

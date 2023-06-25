@@ -13,7 +13,7 @@ def get_spreadsheet_history():
     sheet_history = dict()
 
     for i in range(1, 39067):
-        with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
+        with open(f'data/raws/1078039113/{i}.html.gz', 'rb') as f:
             content = str(gzip.decompress(f.read()), encoding='utf-8')
             script_start = content.rfind('<script')
             script_end = content.rfind('</script>')
@@ -74,7 +74,7 @@ def get_all_csvs():
         pass
 
 def get_csv(i):
-    with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
+    with open(f'data/raws/1078039113/{i}.html.gz', 'rb') as f:
         content = gzip.decompress(f.read())
         # try getting rid of fluff
         content = re.sub(b' tabindex="-1"', b'', content)
@@ -91,7 +91,7 @@ def get_csv(i):
         tree = lxml.html.fromstring(content)
         table = tree.xpath('//table')[0]
         assert(table != None)
-        with open(f'data/score-csv/rev-{i}.csv', 'w') as g:
+        with open(f'data/revs/1078039113/{i}.csv', 'w') as g:
             writer = csv.writer(g)
             writer.writerows([
                 [td.text or '' for td in row.iter(tag='td')]

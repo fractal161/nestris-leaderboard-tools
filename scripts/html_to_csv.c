@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
     for (int i = 30000; i < 31000; i++) {
         printf("parsing revision %d\n", i);
         char in_file[100];
-        sprintf(in_file, "../data/score/rev-%d.html.gz", i);
+        sprintf(in_file, "../data/raws/1078039113/%d.html.gz", i);
         gzFile data_file = gzopen(in_file, "r");
         char buf[CHUNK+1];
 
@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
         if (tr_xpath_obj) {
             xmlNodeSetPtr tr_nodes = tr_xpath_obj->nodesetval;
             char out_file_name[100];
-            sprintf(out_file_name, "../data/score-csv/rev-%d.csv", i);
+            sprintf(out_file_name, "../data/revs/1078039113/%d.csv", i);
             FILE *out_file = fopen(out_file_name, "wb");
 
             for (int j = 0; j < tr_nodes->nodeNr; j++) {

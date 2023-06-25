@@ -27,7 +27,7 @@ const parseCsvFile = async (filename: string): Promise<string[][]> => {
 export async function GET( req: RequestEvent ): Promise<Response> {
   try {
     const i = parseInt(req.url.searchParams.get("index"));
-    const entries = await parseCsvFile(`data/score-csv/rev-${i}.csv`);
+    const entries = await parseCsvFile(`data/revs/1078039113/${i}.csv`);
     return json(entries);
   } catch (e) {
     console.error(e);

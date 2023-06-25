@@ -89,7 +89,7 @@ def write_csv(i):
         #content = re.sub(b' class=".*?"', b'', content)
         #content = re.sub(b' style=".*?"', b'', content)
         #content = re.sub(rb'(<tr><th><div>\d*</div></th></tr>)*</tbody>', b'</tbody>', content)
-        tree = lxml.html.fromstring(content)
+        tree = lxml.html.fromstring(str(content, encoding='utf-8'))
         table = tree.find('.//table/tbody')
         assert(table != None)
         with open(f'data/revs/1078039113/{i}.csv', 'w') as g:

@@ -10,9 +10,11 @@ const parseCsvFile = async (filename: string): Promise<string[][]> => {
         relax_column_count: true,
         skip_empty_lines: true,
     });
-    fs.createReadStream(filename).pipe(parser);
     const rows: Array<Array<string>> = [];
     return new Promise((resolve, reject) => {
+        fs.createReadStream(filename)
+            .on('error', (err) => reject(err))
+            .pipe(parser);
         parser.on("readable", () => {
             let row;
             while ((row = parser.read()) !== null) {
@@ -26,11 +28,13 @@ const parseCsvFile = async (filename: string): Promise<string[][]> => {
 
 export async function GET( req: RequestEvent ): Promise<Response> {
   try {
-    const i = parseInt(req.url.searchParams.get("index"));
-    const entries = await parseCsvFile(`data/revs/1078039113/${i}.csv`);
+    // TODO: better error handling
+    const id = req.url.searchParams.get("id");
+    const rev = req.url.searchParams.get("rev");
+    const entries = await parseCsvFile(`data/revs/${id}/${rev}.csv`);
     return json(entries);
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     throw error(404, "bad");
   }
 }

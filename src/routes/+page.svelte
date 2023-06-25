@@ -1,52 +1,60 @@
 <script lang="ts">
   import DualView from "./DualView.svelte";
-  import { beforeUpdate } from "svelte";
-  let index = 30000;
+  let MIN_REV = 853;
+  let MAX_REV = 39067;
+  let rev = MIN_REV;
   let fetching = false;
   let nextIndex: number | undefined = undefined;
 
   let leftProps = {
-    title: (index).toString(),
-    headers: [ "RANK", "NAME" ],
-    entries: [
-      [ "test", "test", "test", "test" ]
-    ],
+    title: (rev).toString(),
+    headers: [ ],
+    entries: [ [ ] ],
     key: "",
-  }
-  for (let i = 0; i < 200; i++) {
-    leftProps.entries.push([ "test", "test" ]);
   }
 
   let rightProps = {
-    title: (index + 1).toString(),
-    headers: [ "RANK", "NAME" ],
-    entries: [
-      [ "test", "test", "test", "test" ]
-    ],
+    title: (rev + 1).toString(),
+    headers: [ ],
+    entries: [ [ ] ],
     key: "",
   }
 
-  const fetchData = async (index: number | undefined): Promise<void> => {
-    if (index === undefined) return;
+  const updateSheets = async (rev: number | undefined): Promise<void> => {
+    if (rev === undefined) return;
     if (fetching) {
-      nextIndex = index;
+      nextIndex = rev;
       return;
     }
-    fetching = true;
     nextIndex = undefined;
-    const leftEntries = await (await fetch(`/sheet?index=${index}`)).json();
-    leftProps.title = index.toString();
-    leftProps.headers = leftEntries[0];
-    leftProps.entries = leftEntries.slice(1);
-    leftProps.key = index.toString();
-    fetching = false;
-    fetchData(nextIndex);
+    try {
+      fetching = true;
+      const sheetFetch = await fetch("/sheet?" + new URLSearchParams({
+          id: (1078039113).toString(),
+          rev: rev.toString(),
+        }), {
+        method: 'GET',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      });
+      fetching = false;
+      if (sheetFetch.status != 200) {
+        throw Error("error fetching sheet");
+      }
+      const leftEntries = await sheetFetch.json();
+      leftProps.title = rev.toString();
+      leftProps.headers = leftEntries[0];
+      leftProps.entries = leftEntries.slice(1);
+      leftProps.key = rev.toString();
+    }
+    catch (err) {
+      console.error(err);
+    }
+    await updateSheets(nextIndex);
     // leftProps.title = await res.text();
   };
-
-  beforeUpdate(async () => {
-    await fetchData(index);
-  });
+  $: rev, updateSheets(rev);
 </script>
 
 <div id=layout>
@@ -59,9 +67,9 @@
   </div>
 
   <div id=scrollbar>
-    <button class=scroll-button on:click={() => { index = Math.max(1000, index-1) }}>-</button>
-    <input type=range min=1000 max=39000 bind:value={index}>
-    <button class=scroll-button on:click={() => { index = Math.min(39000, index+1) }}>+</button>
+    <button class=scroll-button on:click={() => { rev = Math.max(MIN_REV, rev-1) }}>-</button>
+    <input type=range min={ MIN_REV } max= { MAX_REV } bind:value={rev}>
+    <button class=scroll-button on:click={() => { rev = Math.min(MAX_REV, rev+1) }}>+</button>
   </div>
 
   <div id=sidebar>
@@ -99,7 +107,6 @@
   }
   #sidebar {
     grid-area: side;
-    border: 1px solid blue;
   }
   #view {
     grid-area: view;

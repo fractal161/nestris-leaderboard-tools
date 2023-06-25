@@ -1,3 +1,4 @@
+import sys
 import gzip
 import json
 from http import cookiejar
@@ -60,4 +61,10 @@ def get_timestamp_chunks():
             f.write(json.dumps(info, indent=2))
         max_rev = min_rev - 1
 
-get_revs()
+if __name__ == '__main__':
+    argc = len(sys.argv)
+    if argc > 0:
+        funcname = sys.argv[1]
+        print(funcname)
+        if funcname in locals():
+            locals()[funcname](*sys.argv[2:])

@@ -101,4 +101,10 @@ def get_csv(i):
 
 #cProfile.run('get_csv()', 'app.profile')
 #get_all_csvs()
-get_spreadsheet_history()
+if __name__ == '__main__':
+    argc = len(sys.argv)
+    if argc > 0:
+        funcname = sys.argv[1]
+        print(funcname)
+        if funcname in locals():
+            locals()[funcname](*sys.argv[2:])

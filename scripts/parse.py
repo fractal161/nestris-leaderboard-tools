@@ -3,15 +3,16 @@ import gzip
 import json
 import csv
 from multiprocessing import Pool
+from collections import OrderedDict
 import re
 import sys
 import tqdm
 import cProfile
 
-def track_spreadsheets():
-    sheets = dict()
+def get_spreadsheet_history():
+    sheet_history = dict()
 
-    for i in range(1, 34000):
+    for i in range(1, 39067):
         with open(f'data/score/rev-{i}.html.gz', 'rb') as f:
             content = str(gzip.decompress(f.read()), encoding='utf-8')
             script_start = content.rfind('<script')
@@ -29,25 +30,41 @@ def track_spreadsheets():
                 print(content)
                 sys.exit(1)
 
-            current_sheets = dict(map(
+            current_sheet_names = dict(map(
                 lambda x: (int(x['id']), x['name']),
                 json.loads(script_line[start:end+1])
             ))
-            for sheet_id, name in current_sheets.items():
-                if sheet_id not in sheets.keys():
-                    sheets[sheet_id] = name
+            for sheet_id, name in current_sheet_names.items():
+                # sheet is created
+                if sheet_id not in sheet_history.keys():
+                    interval = OrderedDict()
+                    interval['title'] = name
+                    interval['start'] = i
+                    interval['end'] = None
+                    sheet_history[sheet_id] = [interval]
                     print(f'REV {i}: added {(sheet_id, name)}')
-                elif sheets[sheet_id] != name:
-                    print(f'REV {i}: renamed {(sheet_id, sheets[sheet_id])} to {(sheet_id, name)}')
-                    sheets[sheet_id] = name
-            removed = []
-            for sheet_id, _ in sheets.items():
-                if sheet_id not in current_sheets:
-                    removed.append(sheet_id)
+                # sheet changes name
+                elif sheet_history[sheet_id][-1]['title'] != name:
+                    sheet_history[sheet_id][-1]['end'] = i - 1
+                    print(f'REV {i}: renamed sheet {sheet_id} to {name}')
+                    interval = OrderedDict()
+                    interval['title'] = name
+                    interval['start'] = i
+                    interval['end'] = None
+                    sheet_history[sheet_id].append(interval)
 
-            for sheet_id in removed:
-                print(f'REV {i}: removed {(sheet_id, sheets[sheet_id])}')
-                del sheets[sheet_id]
+            for sheet_id, intervals in sheet_history.items():
+                # sheet is deleted
+                if sheet_id not in current_sheet_names and intervals[-1]['end'] == None:
+                    intervals[-1]['end'] = i
+                    print(f'REV {i}: removed {sheet_id}')
+
+    for sheet_id, intervals in sheet_history.items():
+        if intervals[-1]['end'] == None:
+            intervals[-1]['end'] = 39066
+    with open('data/sheet_history.json', 'w') as f:
+        json.dump(sheet_history, f, indent=2)
+
 
 def get_all_csvs():
     pool = Pool()
@@ -83,5 +100,5 @@ def get_csv(i):
             ])
 
 #cProfile.run('get_csv()', 'app.profile')
-get_all_csvs()
-#track_spreadsheets()
+#get_all_csvs()
+get_spreadsheet_history()

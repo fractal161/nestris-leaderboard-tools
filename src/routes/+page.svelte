@@ -1,34 +1,36 @@
 <script lang="ts">
   import DualView from "./DualView.svelte";
+  import type { SheetProps } from "../types/client";
   let MIN_REV = 853;
-  let MAX_REV = 39067;
-  let rev = MIN_REV;
-  let fetching = false;
-  let nextIndex: number | undefined = undefined;
+  let MAX_REV = 39065;
+  let current_rev = MIN_REV;
+  let fetching: Array<boolean> = [ false, false ];
+  let nextRev: Array<number | undefined> = [ undefined, undefined ];
 
-  let leftProps = {
-    title: (rev).toString(),
-    headers: [ ],
-    entries: [ [ ] ],
-    key: "",
-  }
+  let props: Array<SheetProps> = [
+    {
+      title: current_rev.toString(),
+      headers: [ ],
+      entries: [ [ ] ],
+      key: "",
+    },
+    {
+      title: (current_rev + 1).toString(),
+      headers: [ ],
+      entries: [ [ ] ],
+      key: "",
+    },
+  ];
 
-  let rightProps = {
-    title: (rev + 1).toString(),
-    headers: [ ],
-    entries: [ [ ] ],
-    key: "",
-  }
-
-  const updateSheets = async (rev: number | undefined): Promise<void> => {
-    if (rev === undefined) return;
-    if (fetching) {
-      nextIndex = rev;
+  const updateSheet = async (rev: number | undefined, index: number): Promise<void> => {
+    if (rev == undefined) return;
+    if (fetching[index]) {
+      nextRev[index] = rev;
       return;
     }
-    nextIndex = undefined;
+    nextRev[index] = undefined;
     try {
-      fetching = true;
+      fetching[index] = true;
       const sheetFetch = await fetch("/sheet?" + new URLSearchParams({
           id: (1078039113).toString(),
           rev: rev.toString(),
@@ -38,38 +40,46 @@
           'Content-type': 'application/json',
         },
       });
-      fetching = false;
+      fetching[index] = false;
       if (sheetFetch.status != 200) {
         throw Error("error fetching sheet");
       }
-      const leftEntries = await sheetFetch.json();
-      leftProps.title = rev.toString();
-      leftProps.headers = leftEntries[0];
-      leftProps.entries = leftEntries.slice(1);
-      leftProps.key = rev.toString();
+      const entries = await sheetFetch.json();
+      props[index] = {
+        title: rev.toString(),
+        headers: entries[0],
+        entries: entries.slice(1),
+        key: rev.toString(),
+      };
     }
     catch (err) {
       console.error(err);
     }
-    await updateSheets(nextIndex);
-    // leftProps.title = await res.text();
+    await updateSheet(nextRev[index], index);
   };
-  $: rev, updateSheets(rev);
+
+  const updateProps = async (): Promise<void> => {
+    await Promise.all([
+      updateSheet(current_rev, 0),
+      updateSheet(current_rev+1, 1)
+    ]);
+  };
+  $: current_rev, updateProps();
 </script>
 
 <div id=layout>
 
   <div id=view>
     <DualView
-      leftProps={leftProps}
-      rightProps={rightProps}
+      leftProps={props[0]}
+      rightProps={props[1]}
     />
   </div>
 
   <div id=scrollbar>
-    <button class=scroll-button on:click={() => { rev = Math.max(MIN_REV, rev-1) }}>-</button>
-    <input type=range min={ MIN_REV } max= { MAX_REV } bind:value={rev}>
-    <button class=scroll-button on:click={() => { rev = Math.min(MAX_REV, rev+1) }}>+</button>
+    <button class=scroll-button on:click={() => { current_rev = Math.max(MIN_REV, current_rev-1) }}>-</button>
+    <input type=range min={ MIN_REV } max= { MAX_REV } bind:value={current_rev}>
+    <button class=scroll-button on:click={() => { current_rev = Math.min(MAX_REV, current_rev+1) }}>+</button>
   </div>
 
   <div id=sidebar>

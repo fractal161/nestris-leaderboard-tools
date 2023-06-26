@@ -5,6 +5,7 @@ import csv
 from multiprocessing import Pool
 from collections import OrderedDict
 import re
+import os
 import sys
 import tqdm
 from urllib.parse import unquote
@@ -122,6 +123,31 @@ def get_csv_entry(tag, i):
     elif tag.tag == 'td':
         return (text,)
     return text or ''
+
+def merge_timestamp_chunks():
+    timestamps = [{} for _ in range(39068)]
+    for chunk_name in os.listdir('data/timestamp-chunks'):
+        print('handling', chunk_name)
+        with open(os.path.join('data/timestamp-chunks', chunk_name), 'r') as f:
+            chunk = json.load(f)
+            users = dict()
+            for user_id, user_info in chunk['userMap'].items():
+                users[user_id] = user_info['name']
+            for timestamp in chunk['tileInfo']:
+                start, end = timestamp['start'], timestamp['end']
+                time = timestamp['endMillis']
+                if len(timestamp['users']) > 1:
+                    print(f'rev {start} has mutiple users')
+                if timestamp['expandable']:
+                    print(f'rev {start} is expandable')
+                for i in range(start, end+1):
+                    timestamps[i]['time'] = time
+                    if len(timestamp['users']) > 0:
+                        timestamps[i]['users'] = [users[x] for x in timestamp['users']]
+                    else:
+                        timestamps[i]['users'] = [rev['description'] for rev in timestamp['systemRevs']]
+    with open('data/timestamps.json', 'w') as f:
+        json.dump(timestamps, f, indent=2)
 
 #cProfile.run('get_csv()', 'app.profile')
 #get_all_csvs()

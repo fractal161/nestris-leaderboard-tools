@@ -5,6 +5,7 @@
 -->
 
 <script lang="ts">
+  import type { RGBColor } from "../types/client";
   export let headers: Array<string>;
   export let entries: Array<Array<string>>;
   let cells: Array<Array<HTMLTableCellElement>> = Array.from(
@@ -25,13 +26,16 @@
     width: 0,
     height: 0,
   };
+  export const setCellColor = (i: number, j: number, color: RGBColor): void => {
+    cellColors[i][j] = `rgb(${color.red},${color.green},${color.blue})`;
+  }
   let selectorStyle: string;
   const updateSelectorStyle = (): void => {
       if (selected === undefined) return;
       const [i, j] = selected;
       let cell = cells[i][j];
       if (cell == undefined) return;
-      cellColors[i][j] = "#ff0000";
+      setCellColor(i, j, { red: 255, green: 0, blue: 0 });
       selector.top = cell.offsetTop-1;
       selector.left = cell.offsetLeft-1;
       selector.width = cell.offsetWidth-2;
@@ -66,7 +70,7 @@
             bind:this={cells[0][j]}
             on:click={() => updateSelector(0, j)}
             style={cellColors[0][j] == undefined ? "" :
-              `background-color: ${cellColors[0][j]};`
+              `background-color:${cellColors[0][j]};`
             }
           >{header}</th>
         {/each}
@@ -91,6 +95,7 @@
 <style>
   table {
     border-collapse: collapse;
+    font-size: 10px;
   }
   td, th {
     border: 1px solid gray;

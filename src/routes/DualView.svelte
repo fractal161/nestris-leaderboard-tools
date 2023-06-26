@@ -1,7 +1,9 @@
 <script lang="ts">
+  import type { RGBColor } from "../types/client";
   import SheetView from "./SheetView.svelte";
   export let scrollLeft = 0;
   export let scrollTop = 0;
+  let setCellColor: (i: number, j: number, color: RGBColor) => void;
   export let leftProps: {
     title: string,
     headers: Array<string>,
@@ -53,6 +55,7 @@
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
+      bind:setCellColor={setCellColor}
       on:scroll={setScroll}
     />
   {/key}
@@ -64,6 +67,7 @@
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
+      bind:setCellColor={setCellColor}
       on:scroll={setScroll}
     />
   {/key}

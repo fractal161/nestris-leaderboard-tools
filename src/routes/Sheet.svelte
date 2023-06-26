@@ -10,6 +10,9 @@
   let cells: Array<Array<HTMLTableCellElement>> = Array.from(
     Array(entries.length+1), () => []
   );
+  let cellColors: Array<Array<string>> = Array.from(
+    Array(entries.length+1), () => []
+  );
   export let selected: [number, number] | undefined = undefined;
   let selector: {
     top: number;
@@ -27,7 +30,8 @@
       if (selected === undefined) return;
       const [i, j] = selected;
       let cell = cells[i][j];
-      console.assert(cell !== undefined);
+      if (cell == undefined) return;
+      cellColors[i][j] = "#ff0000";
       selector.top = cell.offsetTop-1;
       selector.left = cell.offsetLeft-1;
       selector.width = cell.offsetWidth-2;
@@ -61,6 +65,9 @@
           <th
             bind:this={cells[0][j]}
             on:click={() => updateSelector(0, j)}
+            style={cellColors[0][j] == undefined ? "" :
+              `background-color: ${cellColors[0][j]};`
+            }
           >{header}</th>
         {/each}
       </tr>
@@ -71,6 +78,9 @@
           <td
             bind:this={cells[i+1][j]}
             on:click={() => updateSelector(i+1, j)}
+            style={cellColors[i+1][j] == undefined ? "" :
+              `background-color:${cellColors[i+1][j]};`
+            }
           >{entry}</td>
         {/each}
       </tr>

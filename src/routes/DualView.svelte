@@ -29,9 +29,6 @@
   // TODO: probably breaks when a cell is undefined on one side
   let selected: [number, number] | undefined = undefined;
 
-  let left: SheetView;
-  let right: SheetView;
-
   const setScroll = (e: Event) => {
     if (e.target instanceof Element) {
       scrollTop = e.target.scrollTop;
@@ -53,7 +50,6 @@
     <SheetView
       headers={leftProps.headers}
       entries={leftProps.entries}
-      bind:this={left}
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
@@ -65,7 +61,6 @@
     <SheetView
       headers={rightProps.headers}
       entries={rightProps.entries}
-      bind:this={right}
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}

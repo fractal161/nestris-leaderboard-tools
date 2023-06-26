@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { afterUpdate } from "svelte";
   import Sheet from "./Sheet.svelte";
   export let headers: Array<string>;
   export let entries: Array<Array<string>>;
@@ -13,9 +12,8 @@
     main.scrollLeft = scrollLeft;
   };
 
-  afterUpdate(async () => {
-    setScroll();
-  });
+  $: scrollTop, setScroll()
+  $: scrollLeft, setScroll()
 </script>
 
 <div bind:this={main} on:scroll>
@@ -25,6 +23,6 @@
 <style>
   div {
     overflow: auto;
-    border: 1px solid black;
+    box-shadow: inset 1px 1px 1px gray, inset -1px -1px 1px gray;
   }
 </style>

@@ -1,5 +1,6 @@
 export type SheetProps = {
     title: string,
+    subtitle: string,
     headers: Array<string>,
     entries: Array<Array<string>>,
     key: string,

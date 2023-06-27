@@ -10,17 +10,30 @@
   let props: Array<SheetProps> = [
     {
       title: current_rev.toString(),
+      subtitle: "",
       headers: [ ],
       entries: [ [ ] ],
       key: "",
     },
     {
       title: (current_rev + 1).toString(),
+      subtitle: "",
       headers: [ ],
       entries: [ [ ] ],
       key: "",
     },
   ];
+
+  const formatTime = (time: number): string => {
+    const date = new Date(time);
+    const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+    const d = date.getUTCDate().toString().padStart(2, "0");
+    const y = date.getUTCFullYear().toString().padStart(2, "0");
+    const h = date.getUTCHours().toString().padStart(2, "0");
+    const m = date.getUTCMinutes().toString().padStart(2, "0");
+    const s = date.getUTCSeconds().toString().padStart(2, "0");
+    return `${mm}/${d}/${y} ${h}:${m}:${s} UTC`;
+  };
 
   const updateSheet = async (rev: number | undefined, index: number): Promise<void> => {
     if (rev == undefined) return;
@@ -44,9 +57,11 @@
       if (sheetFetch.status != 200) {
         throw Error("error fetching sheet");
       }
-      const entries = await sheetFetch.json();
+      const { entries, context } = await sheetFetch.json();
+      console.log(context);
       props[index] = {
         title: rev.toString(),
+        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
         headers: entries[0],
         entries: entries.slice(1),
         key: rev.toString(),

@@ -143,9 +143,9 @@ def merge_timestamp_chunks():
                 for i in range(start, end+1):
                     timestamps[i]['time'] = time
                     if len(timestamp['users']) > 0:
-                        timestamps[i]['users'] = [users[x] for x in timestamp['users']]
+                        timestamps[i]['editors'] = [users[x] for x in timestamp['users']]
                     else:
-                        timestamps[i]['users'] = [rev['description'] for rev in timestamp['systemRevs']]
+                        timestamps[i]['editors'] = [rev['description'] for rev in timestamp['systemRevs']]
     with open('data/timestamps.json', 'w') as f:
         json.dump(timestamps, f, indent=2)
 

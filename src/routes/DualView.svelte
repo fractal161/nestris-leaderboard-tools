@@ -6,11 +6,13 @@
   let setCellColor: (i: number, j: number, color: RGBColor) => void;
   export let leftProps: {
     title: string,
+    subtitle: string,
     headers: Array<string>,
     entries: Array<Array<string>>,
     key?: string,
   } = {
     title: "",
+    subtitle: "",
     headers: [],
     entries: [[]],
     key: ""
@@ -18,17 +20,18 @@
 
   export let rightProps: {
     title: string,
+    subtitle: string,
     headers: Array<string>,
     entries: Array<Array<string>>,
     key?: string,
   } = {
     title: "",
+    subtitle: "",
     headers: [],
     entries: [[]],
     key: ""
   };
 
-  // TODO: probably breaks when a cell is undefined on one side
   let selected: [number, number] | undefined = undefined;
 
   const setScroll = (e: Event) => {
@@ -41,11 +44,13 @@
 
 <div id=layout>
   <div id=left-title>
-    <h2>{leftProps.title}
+    <h2>{leftProps.title}</h2>
+    <p>{leftProps.subtitle}</p>
   </div>
 
   <div id=right-title>
     <h2>{rightProps.title}</h2>
+    <p>{rightProps.subtitle}</p>
   </div>
 
   {#key leftProps.key}
@@ -87,6 +92,10 @@
   }
   div {
     border: 1px solid gray;
+  }
+  p {
+    font-size: 10px;
+    margin: 2px;
   }
   #left-title {
     grid-area: left-title;

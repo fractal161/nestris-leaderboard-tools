@@ -109,7 +109,7 @@
     width: 100vw;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
-    grid-template-columns: minmax(0, 1fr) 25%;
+    grid-template-columns: minmax(0, 1fr) 15%;
     grid-template-areas:
       "view side"
       "slider side";

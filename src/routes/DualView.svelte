@@ -83,8 +83,9 @@
     border: 0px;
     display: grid;
     height: 100%;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       "left-title right-title"
       "left right";

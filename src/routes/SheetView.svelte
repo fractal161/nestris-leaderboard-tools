@@ -18,18 +18,38 @@
   $: scrollLeft, setScroll()
 </script>
 
-<div bind:this={main} on:scroll>
-  <Sheet
-    headers={headers}
-    entries={entries}
-    bind:selected={selected}
-    bind:setCellColor={setCellColor}
-  />
+<div class="parent" bind:this={main} on:scroll>
+  <div class="child">
+    <Sheet
+      headers={headers}
+      entries={entries}
+      bind:selected={selected}
+      bind:setCellColor={setCellColor}
+    />
+  </div>
+  <div class="scrollspace"></div>
 </div>
 
 <style>
-  div {
-    overflow: auto;
+  .child {
+    display: inline-block;
+    position: relative;
+  }
+  .parent {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    box-sizing: block;
     box-shadow: inset 1px 1px 1px gray, inset -1px -1px 1px gray;
+    overflow: scroll;
+  }
+  .scrollspace {
+    position: sticky;
+    border: 1px solid red;
+    top: 0px;
+    right: 0px;
+    background-color: lightgrey;
+    min-width: 10px;
+    height: 100%;
   }
 </style>

@@ -1,22 +1,24 @@
 <script lang="ts">
   import DualView from "./DualView.svelte";
   import type { SheetProps } from "../types/client";
+	import { onMount } from "svelte";
   let MIN_REV = 853;
   let MAX_REV = 39065;
-  let current_rev = MIN_REV;
+  let current_rev: number;
   let fetching: Array<boolean> = [ false, false ];
   let nextRev: Array<number | undefined> = [ undefined, undefined ];
+  let sheetIds: Array<number> = [ 123, 456 ];
 
   let props: Array<SheetProps> = [
     {
-      title: current_rev.toString(),
+      title: "",
       subtitle: "",
       headers: [ ],
       entries: [ [ ] ],
       key: "",
     },
     {
-      title: (current_rev + 1).toString(),
+      title: "",
       subtitle: "",
       headers: [ ],
       entries: [ [ ] ],
@@ -74,12 +76,17 @@
   };
 
   const updateProps = async (): Promise<void> => {
+    if (current_rev === undefined) return;
     await Promise.all([
       updateSheet(current_rev, 0),
       updateSheet(current_rev+1, 1)
     ]);
   };
   $: current_rev, updateProps();
+  onMount(async () => {
+    current_rev = MIN_REV;
+    await updateProps();
+  });
 </script>
 
 <div id=layout>
@@ -98,7 +105,14 @@
   </div>
 
   <div id=sidebar>
-    Unsure of what to put here
+    <p>Sheet ID:</p>
+    <select>
+    {#each sheetIds as id}
+      <option value={id}>
+        {id}
+      </option>
+    {/each}
+    </select>
   </div>
 </div>
 
@@ -132,6 +146,7 @@
   }
   #sidebar {
     grid-area: side;
+    padding: 6px;
   }
   #view {
     grid-area: view;

@@ -26,7 +26,7 @@
     width: 0,
     height: 0,
   };
-  export const setCellColor = (i: number, j: number, color: RGBColor): void => {
+  export let setCellColor = (i: number, j: number, color: RGBColor): void => {
     cellColors[i][j] = `rgb(${color.red},${color.green},${color.blue})`;
   }
   let selectorStyle: string;
@@ -99,7 +99,6 @@
   }
   td, th {
     border: 1px solid gray;
-    user-select: none;
   }
   .wrapper {
     position: relative;

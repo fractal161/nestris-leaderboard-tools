@@ -1,13 +1,15 @@
 <script lang="ts">
   import DualView from "./DualView.svelte";
   import type { SheetProps } from "../types/client";
-	import { onMount } from "svelte";
+  import type { PageServerData } from "./$types";
+  import { onMount } from "svelte";
+  export let data: PageServerData;
   let MIN_REV = 853;
   let MAX_REV = 39065;
   let current_rev: number;
   let fetching: Array<boolean> = [ false, false ];
   let nextRev: Array<number | undefined> = [ undefined, undefined ];
-  let sheetIds: Array<number> = [ 123, 456 ];
+  let sheetIds: Array<number> = [];
 
   let props: Array<SheetProps> = [
     {
@@ -60,7 +62,6 @@
         throw Error("error fetching sheet");
       }
       const { entries, context } = await sheetFetch.json();
-      console.log(context);
       props[index] = {
         title: rev.toString(),
         subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
@@ -84,7 +85,9 @@
   };
   $: current_rev, updateProps();
   onMount(async () => {
+    console.log(data);
     current_rev = MIN_REV;
+    sheetIds = data.gids;
     await updateProps();
   });
 </script>

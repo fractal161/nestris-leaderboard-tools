@@ -5,14 +5,15 @@
 -->
 
 <script lang="ts">
+  import { onMount } from "svelte";
   import type { RGBColor } from "../types/client";
   import VirtualList from '@sveltejs/svelte-virtual-list';
   export let headers: Array<string>;
   export let entries: Array<Array<string>>;
-  export let rowEntries: Array<{
-    index: number,
-    row: Array<string>
-  }>;
+  //export let rowEntries: Array<{
+  //  index: number,
+  //  row: Array<string>
+  //}>;
   let cells: Array<Array<HTMLTableCellElement>> = Array.from(
     Array(entries.length+1), () => []
   );
@@ -63,16 +64,19 @@
       updateSelectorStyle();
     }
   }
-  const updateRowEntries = () => {
-    rowEntries = entries.map((row, i) => {
-      return {
-        index: i,
-        row: row,
-      };
-    });
-  }
+  //const updateRowEntries = () => {
+  //  rowEntries = entries.map((row, i) => {
+  //    return {
+  //      index: i,
+  //      row: row,
+  //    };
+  //  });
+  //}
   $: selected, updateSelectorStyle();
-  $: entries, updateRowEntries();
+  //$: entries, updateRowEntries();
+  onMount(() => {
+    console.log("Sheet mounted");
+  });
 </script>
 
 <div class="wrapper">

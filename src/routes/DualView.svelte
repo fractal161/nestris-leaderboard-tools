@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import type { RGBColor } from "../types/client";
   import { diffSheets } from "../lib/diff";
   import SheetView from "./SheetView.svelte";
+  import Sheet from "./Sheet.svelte";
   export let scrollLeft = 0;
   export let scrollTop = 0;
   let setCellColor: Array<(i: number, j: number, color: RGBColor) => void> = [];
@@ -46,7 +47,6 @@
   };
   const setSheetColors = async () => {
     await tick();
-    if (setCellColor[0] === undefined) return;
     const diff = diffSheets(leftProps.entries, rightProps.entries);
     // track index of earliest row for each half
     let min1 = Infinity;
@@ -78,6 +78,9 @@
   };
   $: leftProps.entries, setSheetColors();
   $: rightProps.entries, setSheetColors();
+  onMount(() => {
+    console.log("DualView mounted");
+  });
 </script>
 
 <div id=layout>
@@ -93,28 +96,34 @@
 
   {#key `${leftProps.key}${rightProps.key}`}
     <SheetView
-      headers={leftProps.headers}
-      entries={leftProps.entries}
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
-      bind:selected={selected}
-      bind:setCellColor={setCellColor[0]}
-      bind:getRowHeight={getRowHeight[0]}
       on:scroll={setScroll}
-    />
+    >
+      <Sheet
+        headers={leftProps.headers}
+        entries={leftProps.entries}
+        bind:selected={selected}
+        bind:setCellColor={setCellColor[0]}
+        bind:getRowHeight={getRowHeight[0]}
+      />
+    </SheetView>
   {/key}
 
   {#key `${leftProps.key}${rightProps.key}`}
     <SheetView
-      headers={rightProps.headers}
-      entries={rightProps.entries}
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
-      bind:selected={selected}
-      bind:setCellColor={setCellColor[1]}
-      bind:getRowHeight={getRowHeight[1]}
       on:scroll={setScroll}
-    />
+    >
+      <Sheet
+        headers={rightProps.headers}
+        entries={rightProps.entries}
+        bind:selected={selected}
+        bind:setCellColor={setCellColor[1]}
+        bind:getRowHeight={getRowHeight[1]}
+      />
+    </SheetView>
   {/key}
 </div>
 

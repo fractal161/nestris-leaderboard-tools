@@ -1,14 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { RGBColor } from "../types/client";
-  import Sheet from "./Sheet.svelte";
-  export let headers: Array<string>;
-  export let entries: Array<Array<string>>;
   export let scrollTop = 0;
   export let scrollLeft = 0;
-  export let selected: [number, number] | undefined = undefined;
-  export let setCellColor: (i: number, j: number, color: RGBColor) => void;
-  export let getRowHeight: (i: number) => number;
   let main: HTMLDivElement;
   const setScroll = () => {
     if (main === undefined) return;
@@ -18,18 +11,15 @@
 
   $: scrollTop, setScroll()
   $: scrollLeft, setScroll()
-  onMount(setScroll);
+  onMount(() => {
+    console.log("SheetView mounted");
+    setScroll();
+  });
 </script>
 
 <div class="parent" bind:this={main} on:scroll>
   <div class="child">
-    <Sheet
-      headers={headers}
-      entries={entries}
-      bind:selected={selected}
-      bind:setCellColor={setCellColor}
-      bind:getRowHeight={getRowHeight}
-    />
+    <slot/>
   </div>
   <div class="scrollspace"></div>
 </div>

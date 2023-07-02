@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { afterUpdate, tick } from "svelte";
+  import { tick } from "svelte";
   import type { RGBColor } from "../types/client";
   import { diffSheets } from "../lib/diff";
   import SheetView from "./SheetView.svelte";
   export let scrollLeft = 0;
   export let scrollTop = 0;
   let setCellColor: Array<(i: number, j: number, color: RGBColor) => void> = [];
+  let getRowHeight: Array<(i: number) => number> = [];
   export let leftProps: {
     title: string,
     subtitle: string,
@@ -37,6 +38,7 @@
   let selected: [number, number] | undefined = undefined;
 
   const setScroll = (e: Event) => {
+    e.preventDefault();
     if (e.target instanceof Element) {
       scrollTop = e.target.scrollTop;
       scrollLeft = e.target.scrollLeft;
@@ -44,25 +46,35 @@
   };
   const setSheetColors = async () => {
     await tick();
+    if (setCellColor[0] === undefined) return;
     const diff = diffSheets(leftProps.entries, rightProps.entries);
+    // track index of earliest row for each half
+    let min1 = Infinity;
+    let min2 = Infinity;
     for (const [i1, i2] of diff.moved) {
       for (let j = 0; j < leftProps.entries[i1].length; j++) {
         setCellColor[0](i1+1, j, { red: 90, green: 176, blue: 246 });
+        min1 = Math.min(min1, i1);
       }
       for (let j = 0; j < rightProps.entries[i2].length; j++) {
         setCellColor[1](i2+1, j, { red: 90, green: 176, blue: 246 });
+        min2 = Math.min(min2, i2);
       }
     }
     for (const i of diff.added) {
       for (let j = 0; j < rightProps.entries[i].length; j++) {
         setCellColor[1](i+1, j, { red: 151, green: 202, blue: 114 });
+        min2 = Math.min(min2, i);
       }
     }
     for (const i of diff.removed) {
       for (let j = 0; j < leftProps.entries[i].length; j++) {
         setCellColor[0](i+1, j, { red: 239, green: 95, blue: 107 });
+        min1 = Math.min(min1, i);
       }
     }
+    // scroll to show the earliest colored row
+    scrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
   };
   $: leftProps.entries, setSheetColors();
   $: rightProps.entries, setSheetColors();
@@ -87,6 +99,7 @@
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
       bind:setCellColor={setCellColor[0]}
+      bind:getRowHeight={getRowHeight[0]}
       on:scroll={setScroll}
     />
   {/key}
@@ -99,6 +112,7 @@
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
       bind:setCellColor={setCellColor[1]}
+      bind:getRowHeight={getRowHeight[1]}
       on:scroll={setScroll}
     />
   {/key}

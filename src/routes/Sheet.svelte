@@ -30,6 +30,13 @@
     cellColors[i][j] = `rgb(${color.red},${color.green},${color.blue})`;
   }
   let selectorStyle: string;
+  export const getRowHeight = (i: number): number => {
+    if (cells === undefined) return 0;
+    if (i >= cells.length) return 0;
+    if (cells[i].length === 0) return 0;
+    console.log(cells[i+1][0]);
+    return cells[i+1][0].offsetTop;
+  }
   const updateSelectorStyle = (): void => {
     if (selected === undefined) return;
     const [i, j] = selected;

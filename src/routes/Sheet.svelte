@@ -33,18 +33,25 @@
   }
   let selectorStyle: string;
   export const getRowHeight = (i: number): number => {
-    if (i >= cells.length) return 0;
-    if (cells[i].length === 0) return 0;
-    return cells[i][0].offsetTop;
+    const cell = entries[i]?.[0].elem;
+    if (cell === undefined) {
+      console.log(`Attempted to get row ${i} in getRowHeight`);
+      return 0;
+    }
+    return cell.offsetTop;
   }
   const updateSelectorStyle = (): void => {
     if (selected === undefined) return;
     const [i, j] = selected;
-    let cell = cells[i][j];
-    selector.top = cell.offsetTop-1;
-    selector.left = cell.offsetLeft-1;
-    selector.width = cell.offsetWidth-2;
-    selector.height = cell.offsetHeight-2;
+    let cellElem = entries[i][j].elem;
+    if (cellElem === undefined) {
+      console.log(`Attempted to update location ${i}, ${j} in updateSelectorStyle`);
+      return;
+    }
+    selector.top = cellElem.offsetTop-1;
+    selector.left = cellElem.offsetLeft-1;
+    selector.width = cellElem.offsetWidth-2;
+    selector.height = cellElem.offsetHeight-2;
     selectorStyle = `left: ${selector.left}px;
       top: ${selector.top}px; width: ${selector.width}px;
       height: ${selector.height}px`;
@@ -86,7 +93,7 @@
           <th
             role=cell
             tabindex=-1
-            bind:this={cells[0][j]}
+            bind:this={entry.elem}
             on:click={() => updateSelector(0, j)}
             style={entry.color == undefined ? "" :
               `background-color:${entry.color};`
@@ -105,7 +112,7 @@
               <td
                 role=cell
                 tabindex=-1
-                bind:this={cells[i][j]}
+                bind:this={entry.elem}
                 on:click={() => updateSelector(i, j)}
                 style={entry.color == undefined ? "" :
                   `background-color:${entry.color};`

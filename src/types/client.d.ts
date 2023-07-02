@@ -10,6 +10,7 @@ export type SheetCellProps = {
     row: number,
     col: number,
     color: string,
+    elem?: HTMLTableCellElement,
 }
 
 export type RGBColor = {

@@ -71,6 +71,8 @@
       }
     }
     // scroll to show the earliest colored row
+    if (min1 === Infinity) min1 = 0;
+    if (min2 === Infinity) min2 = 0;
     scrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
   };
   $: leftProps.entries, setSheetColors();
@@ -91,35 +93,31 @@
     <p>{rightProps.subtitle}</p>
   </div>
 
-  {#key `${leftProps.key}${rightProps.key}`}
-    <SheetView
-      bind:scrollTop={scrollTop}
-      bind:scrollLeft={scrollLeft}
-      on:scroll={setScroll}
-    >
-      <Sheet
-        entries={getSheetProps(leftProps)}
-        bind:selected={selected}
-        bind:setCellColor={setCellColor[0]}
-        bind:getRowHeight={getRowHeight[0]}
-      />
-    </SheetView>
-  {/key}
+  <SheetView
+    bind:scrollTop={scrollTop}
+    bind:scrollLeft={scrollLeft}
+    on:scroll={setScroll}
+  >
+    <Sheet
+      entries={getSheetProps(leftProps)}
+      bind:selected={selected}
+      bind:setCellColor={setCellColor[0]}
+      bind:getRowHeight={getRowHeight[0]}
+    />
+  </SheetView>
 
-  {#key `${leftProps.key}${rightProps.key}`}
-    <SheetView
-      bind:scrollTop={scrollTop}
-      bind:scrollLeft={scrollLeft}
-      on:scroll={setScroll}
-    >
-      <Sheet
-        entries={getSheetProps(rightProps)}
-        bind:selected={selected}
-        bind:setCellColor={setCellColor[1]}
-        bind:getRowHeight={getRowHeight[1]}
-      />
-    </SheetView>
-  {/key}
+  <SheetView
+    bind:scrollTop={scrollTop}
+    bind:scrollLeft={scrollLeft}
+    on:scroll={setScroll}
+  >
+    <Sheet
+      entries={getSheetProps(rightProps)}
+      bind:selected={selected}
+      bind:setCellColor={setCellColor[1]}
+      bind:getRowHeight={getRowHeight[1]}
+    />
+  </SheetView>
 </div>
 
 <style>

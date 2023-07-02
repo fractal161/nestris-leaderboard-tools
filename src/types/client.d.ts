@@ -1,9 +1,15 @@
-export type SheetProps = {
+export type DualViewProps = {
     title: string,
     subtitle: string,
-    headers: Array<string>,
     entries: Array<Array<string>>,
     key: string,
+}
+
+export type SheetCellProps = {
+    content: string,
+    row: number,
+    col: number,
+    color: string,
 }
 
 export type RGBColor = {

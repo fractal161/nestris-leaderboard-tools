@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import type { RGBColor } from "../types/client";
+  import type { RGBColor, DualViewProps } from "../types/client";
   import { diffSheets } from "../lib/diff";
   import SheetView from "./SheetView.svelte";
   import Sheet from "./Sheet.svelte";
@@ -8,35 +8,32 @@
   export let scrollTop = 0;
   let setCellColor: Array<(i: number, j: number, color: RGBColor) => void> = [];
   let getRowHeight: Array<(i: number) => number> = [];
-  export let leftProps: {
-    title: string,
-    subtitle: string,
-    headers: Array<string>,
-    entries: Array<Array<string>>,
-    key?: string,
-  } = {
+  export let leftProps: DualViewProps = {
     title: "",
     subtitle: "",
-    headers: [],
     entries: [[]],
     key: ""
   };
 
-  export let rightProps: {
-    title: string,
-    subtitle: string,
-    headers: Array<string>,
-    entries: Array<Array<string>>,
-    key?: string,
-  } = {
+  export let rightProps: DualViewProps = {
     title: "",
     subtitle: "",
-    headers: [],
     entries: [[]],
     key: ""
   };
 
   let selected: [number, number] | undefined = undefined;
+
+  const getSheetProps = (props: DualViewProps) => {
+    return props.entries.map((row, i) => row.map((entry, j) => {
+      return {
+        content: entry,
+        row: i,
+        col: j,
+        color: "rgb(255, 255, 255)",
+      }
+    }));
+  }
 
   const setScroll = (e: Event) => {
     e.preventDefault();
@@ -53,23 +50,23 @@
     let min2 = Infinity;
     for (const [i1, i2] of diff.moved) {
       for (let j = 0; j < leftProps.entries[i1].length; j++) {
-        setCellColor[0](i1+1, j, { red: 90, green: 176, blue: 246 });
+        setCellColor[0](i1, j, { red: 90, green: 176, blue: 246 });
         min1 = Math.min(min1, i1);
       }
       for (let j = 0; j < rightProps.entries[i2].length; j++) {
-        setCellColor[1](i2+1, j, { red: 90, green: 176, blue: 246 });
+        setCellColor[1](i2, j, { red: 90, green: 176, blue: 246 });
         min2 = Math.min(min2, i2);
       }
     }
     for (const i of diff.added) {
       for (let j = 0; j < rightProps.entries[i].length; j++) {
-        setCellColor[1](i+1, j, { red: 151, green: 202, blue: 114 });
+        setCellColor[1](i, j, { red: 151, green: 202, blue: 114 });
         min2 = Math.min(min2, i);
       }
     }
     for (const i of diff.removed) {
       for (let j = 0; j < leftProps.entries[i].length; j++) {
-        setCellColor[0](i+1, j, { red: 239, green: 95, blue: 107 });
+        setCellColor[0](i, j, { red: 239, green: 95, blue: 107 });
         min1 = Math.min(min1, i);
       }
     }
@@ -101,8 +98,7 @@
       on:scroll={setScroll}
     >
       <Sheet
-        headers={leftProps.headers}
-        entries={leftProps.entries}
+        entries={getSheetProps(leftProps)}
         bind:selected={selected}
         bind:setCellColor={setCellColor[0]}
         bind:getRowHeight={getRowHeight[0]}
@@ -117,8 +113,7 @@
       on:scroll={setScroll}
     >
       <Sheet
-        headers={rightProps.headers}
-        entries={rightProps.entries}
+        entries={getSheetProps(rightProps)}
         bind:selected={selected}
         bind:setCellColor={setCellColor[1]}
         bind:getRowHeight={getRowHeight[1]}

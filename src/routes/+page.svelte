@@ -26,14 +26,12 @@
     {
       title: "",
       subtitle: "",
-      headers: [ ],
       entries: [ [ ] ],
       key: "",
     },
     {
       title: "",
       subtitle: "",
-      headers: [ ],
       entries: [ [ ] ],
       key: "",
     },
@@ -69,8 +67,7 @@
       props[index] = {
         title: rev.toString() + ": " + context.name,
         subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
-        headers: entries[0],
-        entries: entries.slice(1),
+        entries: entries,
         key: rev.toString(),
       };
     }

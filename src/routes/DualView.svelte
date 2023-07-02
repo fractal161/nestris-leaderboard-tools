@@ -47,20 +47,20 @@
     const diff = diffSheets(leftProps.entries, rightProps.entries);
     for (const [i1, i2] of diff.moved) {
       for (let j = 0; j < leftProps.entries[i1].length; j++) {
-        setCellColor[0](i1+1, j, { red: 0, green: 0, blue: 255 });
+        setCellColor[0](i1+1, j, { red: 90, green: 176, blue: 246 });
       }
       for (let j = 0; j < rightProps.entries[i2].length; j++) {
-        setCellColor[1](i2+1, j, { red: 0, green: 0, blue: 255 });
+        setCellColor[1](i2+1, j, { red: 90, green: 176, blue: 246 });
       }
     }
     for (const i of diff.added) {
       for (let j = 0; j < rightProps.entries[i].length; j++) {
-        setCellColor[1](i+1, j, { red: 0, green: 255, blue: 0 });
+        setCellColor[1](i+1, j, { red: 151, green: 202, blue: 114 });
       }
     }
     for (const i of diff.removed) {
       for (let j = 0; j < leftProps.entries[i].length; j++) {
-        setCellColor[0](i+1, j, { red: 255, green: 0, blue: 0 });
+        setCellColor[0](i+1, j, { red: 239, green: 95, blue: 107 });
       }
     }
   };

@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { afterUpdate, tick } from "svelte";
   import type { RGBColor } from "../types/client";
+  import { diffSheets } from "../lib/diff";
   import SheetView from "./SheetView.svelte";
   export let scrollLeft = 0;
   export let scrollTop = 0;
-  let setCellColor: (i: number, j: number, color: RGBColor) => void;
+  let setCellColor: Array<(i: number, j: number, color: RGBColor) => void> = [];
   export let leftProps: {
     title: string,
     subtitle: string,
@@ -40,6 +42,30 @@
       scrollLeft = e.target.scrollLeft;
     }
   };
+  const setSheetColors = async () => {
+    await tick();
+    const diff = diffSheets(leftProps.entries, rightProps.entries);
+    for (const [i1, i2] of diff.moved) {
+      for (let j = 0; j < leftProps.entries[i1].length; j++) {
+        setCellColor[0](i1+1, j, { red: 0, green: 0, blue: 255 });
+      }
+      for (let j = 0; j < rightProps.entries[i2].length; j++) {
+        setCellColor[1](i2+1, j, { red: 0, green: 0, blue: 255 });
+      }
+    }
+    for (const i of diff.added) {
+      for (let j = 0; j < rightProps.entries[i].length; j++) {
+        setCellColor[1](i+1, j, { red: 0, green: 255, blue: 0 });
+      }
+    }
+    for (const i of diff.removed) {
+      for (let j = 0; j < leftProps.entries[i].length; j++) {
+        setCellColor[0](i+1, j, { red: 255, green: 0, blue: 0 });
+      }
+    }
+  };
+  $: leftProps.entries, setSheetColors();
+  $: rightProps.entries, setSheetColors();
 </script>
 
 <div id=layout>
@@ -53,26 +79,26 @@
     <p>{rightProps.subtitle}</p>
   </div>
 
-  {#key leftProps.key}
+  {#key `${leftProps.key}${rightProps.key}`}
     <SheetView
       headers={leftProps.headers}
       entries={leftProps.entries}
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
-      bind:setCellColor={setCellColor}
+      bind:setCellColor={setCellColor[0]}
       on:scroll={setScroll}
     />
   {/key}
 
-  {#key rightProps.key}
+  {#key `${leftProps.key}${rightProps.key}`}
     <SheetView
       headers={rightProps.headers}
       entries={rightProps.entries}
       bind:scrollTop={scrollTop}
       bind:scrollLeft={scrollLeft}
       bind:selected={selected}
-      bind:setCellColor={setCellColor}
+      bind:setCellColor={setCellColor[1]}
       on:scroll={setScroll}
     />
   {/key}

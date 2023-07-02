@@ -26,23 +26,22 @@
     width: 0,
     height: 0,
   };
-  export let setCellColor = (i: number, j: number, color: RGBColor): void => {
+  export const setCellColor = (i: number, j: number, color: RGBColor): void => {
     cellColors[i][j] = `rgb(${color.red},${color.green},${color.blue})`;
   }
   let selectorStyle: string;
   const updateSelectorStyle = (): void => {
-      if (selected === undefined) return;
-      const [i, j] = selected;
-      let cell = cells[i][j];
-      if (cell == undefined) return;
-      setCellColor(i, j, { red: 255, green: 0, blue: 0 });
-      selector.top = cell.offsetTop-1;
-      selector.left = cell.offsetLeft-1;
-      selector.width = cell.offsetWidth-2;
-      selector.height = cell.offsetHeight-2;
-      selectorStyle = `left: ${selector.left}px;
-        top: ${selector.top}px; width: ${selector.width}px;
-        height: ${selector.height}px`;
+    if (selected === undefined) return;
+    const [i, j] = selected;
+    let cell = cells[i][j];
+    if (cell == undefined) return;
+    selector.top = cell.offsetTop-1;
+    selector.left = cell.offsetLeft-1;
+    selector.width = cell.offsetWidth-2;
+    selector.height = cell.offsetHeight-2;
+    selectorStyle = `left: ${selector.left}px;
+      top: ${selector.top}px; width: ${selector.width}px;
+      height: ${selector.height}px`;
   }
   const updateSelector = (i: number, j: number): void => {
     if (selected !== undefined && selected[0] === i && selected[1] === j) {

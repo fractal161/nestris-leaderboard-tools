@@ -1,6 +1,5 @@
 import hash from "object-hash";
 import { diffArrays } from "diff";
-import assert from "node:assert";
 
 /**
   * STRATEGY
@@ -22,8 +21,8 @@ export const diffSheets = (
     added: Array<number>,
     removed: Array<number>
 }=> {
-    const hash1 = array1.map((row) => hash(row));
-    const hash2 = array2.map((row) => hash(row));
+    const hash1 = array1.map((row) => hash(row.slice(1)));
+    const hash2 = array2.map((row) => hash(row.slice(1)));
     const rowDiff = diffArrays(hash1, hash2);
     // associates rows that aren't part of the diff with their
     // original positions in each array
@@ -33,7 +32,7 @@ export const diffSheets = (
     let index1 = 0;
     let index2 = 0;
     for (const change of rowDiff) {
-        assert(change.count !== undefined);
+        if (change.count === undefined) throw Error("no count");
         // present in array2 but not array1
         if (change.added) {
             for (const row of change.value) {
@@ -54,20 +53,20 @@ export const diffSheets = (
             index2 += change.count;
         }
     }
-    assert(index1 === hash1.length);
-    assert(index2 === hash2.length);
+    console.assert(index1 === hash1.length);
+    console.assert(index2 === hash2.length);
     const moved: Array<[number, number]> = [];
     const added: Array<number> = [];
     const removed: Array<number> = [];
     // if both maps have a common entry, that means the row was moved
     // otherwise, it was truly deleted
-    for (const [key, index] of map1) {
+    for (const [key, index1] of map1) {
         const index2 = map2.get(key);
         if (index2 !== undefined) {
-            moved.push([index, index2]);
+            moved.push([index1, index2]);
         }
         else {
-            removed.push(index);
+            removed.push(index1);
         }
     }
     for (const [key, index] of map2) {

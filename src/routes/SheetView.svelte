@@ -6,7 +6,7 @@
   export let scrollTop = 0;
   export let scrollLeft = 0;
   export let selected: [number, number] | undefined = undefined;
-  export const setCellColor: (i: number, j: number, color: RGBColor) => void;
+  export let setCellColor: (i: number, j: number, color: RGBColor) => void;
   let main: HTMLDivElement;
   const setScroll = () => {
     if (main === undefined) return;

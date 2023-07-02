@@ -6,7 +6,7 @@
   export let data: PageServerData;
   let MIN_INDEX: number;
   let MAX_INDEX: number;
-  let current_index: number;
+  let currentIndex: number;
   let index_is_updating: boolean;
   let index_has_changed: boolean;
   let menuGid: string;
@@ -20,6 +20,7 @@
   } = {};
   let menuBoard = "";
   let mode = "leaderboard";
+  let menuIndex: number;
 
   let props: Array<SheetProps> = [
     {
@@ -79,7 +80,7 @@
   };
 
   const updateProps = async (): Promise<void> => {
-    if (current_index === undefined) return;
+    if (currentIndex === undefined) return;
     // use index to compute the rev+id that's needed to be fetched
     if (index_is_updating) {
       index_has_changed = true;
@@ -88,8 +89,8 @@
     index_is_updating = true;
     if (mode === "sheet") {
       await Promise.all([
-        updateSheet(0, menuGid, current_index),
-        updateSheet(1, menuGid, current_index+1)
+        updateSheet(0, menuGid, currentIndex),
+        updateSheet(1, menuGid, currentIndex+1)
       ]);
     }
     else if (mode === "leaderboard") {
@@ -112,8 +113,8 @@
           }
           throw Error("invalid index");
         };
-        const version1 = getVersion(current_index);
-        const version2 = getVersion(current_index+1);
+        const version1 = getVersion(currentIndex);
+        const version2 = getVersion(currentIndex+1);
         await Promise.all([
           updateSheet(0, version1.id, version1.rev),
           updateSheet(1, version2.id, version2.rev)
@@ -142,7 +143,8 @@
         }
         MIN_INDEX = min;
         MAX_INDEX = max;
-        current_index = MIN_INDEX;
+        currentIndex = MIN_INDEX;
+        menuIndex = MIN_INDEX;
       }
       else {
         throw Error("invalid gid");
@@ -157,7 +159,8 @@
         }
         MIN_INDEX = 0;
         MAX_INDEX = max-2; // figured out by trial and error lmao
-        current_index = 0;
+        currentIndex = 0;
+        menuIndex = 0;
       }
       else {
         throw Error("invalid leaderboard name");
@@ -165,15 +168,22 @@
     }
     await updateProps();
   }
+  const updateIndexFromMenu = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      currentIndex = menuIndex;
+    }
+  }
   onMount(async () => {
-    current_index = MIN_INDEX;
+    currentIndex = MIN_INDEX;
+    menuIndex = MIN_INDEX;
     sheetIds = data.gids;
     boards = data.boards;
     menuGid = sheetIds[0];
     menuBoard = Object.keys(boards)[0];
     await updateProps();
   });
-  $: current_index, updateProps();
+  $: currentIndex, updateProps();
+  $: currentIndex, menuIndex = currentIndex;
   $: menuGid, updateInterval();
   $: menuBoard, updateInterval();
   $: mode, updateInterval();
@@ -189,22 +199,30 @@
   </div>
 
   <div id=scrollbar>
+    <p class=scrollbar-text>Index:</p>
+    <input
+      type=number
+      min={ MIN_INDEX }
+      max={ MAX_INDEX }
+      bind:value={menuIndex}
+      on:keypress={updateIndexFromMenu}
+    >
     <button class=scroll-button on:click={() => {
-      current_index = Math.max(MIN_INDEX, current_index-1)
+      currentIndex = Math.max(MIN_INDEX, currentIndex-1)
     }}>-</button>
     <input
       type=range
       min={ MIN_INDEX }
       max= { MAX_INDEX }
-      bind:value={current_index}
+      bind:value={currentIndex}
     >
     <button class=scroll-button on:click={() => {
-      current_index = Math.min(MAX_INDEX, current_index+1)
+      currentIndex = Math.min(MAX_INDEX, currentIndex+1)
     }}>+</button>
   </div>
 
   <div id=sidebar>
-    <p>Mode:</p>
+    <p class=sidebar-text>Mode:</p>
     <select bind:value={mode}>
       <option value="leaderboard">leaderboard</option>
       <option value="sheet">sheet</option>
@@ -252,6 +270,9 @@
     border: none;
     width: 100%;
   }
+  input[type=number] {
+    width: 75px;
+  }
   #scrollbar {
     grid-area: slider;
     margin: auto;
@@ -263,6 +284,9 @@
   #sidebar {
     grid-area: side;
     padding: 6px;
+  }
+  .scrollbar-text {
+    margin: auto;
   }
   #view {
     grid-area: view;

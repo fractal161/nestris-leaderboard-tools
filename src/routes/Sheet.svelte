@@ -6,8 +6,13 @@
 
 <script lang="ts">
   import type { RGBColor } from "../types/client";
+  import VirtualList from '@sveltejs/svelte-virtual-list';
   export let headers: Array<string>;
   export let entries: Array<Array<string>>;
+  export let rowEntries: Array<{
+    index: number,
+    row: Array<string>
+  }>;
   let cells: Array<Array<HTMLTableCellElement>> = Array.from(
     Array(entries.length+1), () => []
   );
@@ -58,7 +63,16 @@
       updateSelectorStyle();
     }
   }
+  const updateRowEntries = () => {
+    rowEntries = entries.map((row, i) => {
+      return {
+        index: i,
+        row: row,
+      };
+    });
+  }
   $: selected, updateSelectorStyle();
+  $: entries, updateRowEntries();
 </script>
 
 <div class="wrapper">
@@ -81,6 +95,22 @@
         {/each}
       </tr>
     </thead>
+  <!--
+    <VirtualList items={rowEntries} let:item>
+      {console.log(rowEntries)}
+      <tr>
+        {#each item.value as entry, j}
+          <td
+            bind:this={cells[item.index+1][j]}
+            on:click={() => updateSelector(item.index+1, j)}
+            style={cellColors[item.index+1][j] == undefined ? "" :
+              `background-color:${cellColors[entry.index+1][j]};`
+            }
+          >{entry}</td>
+        {/each}
+      </tr>
+    </VirtualList>
+    -->
     {#each entries as row, i}
       <tr>
         {#each row as entry, j}

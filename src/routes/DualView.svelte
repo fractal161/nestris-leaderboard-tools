@@ -13,23 +13,23 @@
   export let leftProps: DualViewProps = {
     title: "",
     subtitle: "",
-    entries: [[]],
+    cells: [[]],
     key: ""
   };
 
   export let rightProps: DualViewProps = {
     title: "",
     subtitle: "",
-    entries: [[]],
+    cells: [[]],
     key: ""
   };
 
   let selected: [number, number] | undefined = undefined;
 
-  const getEntries = (props: DualViewProps) => {
-    return props.entries.map((row, i) => row.map((entry, j) => {
+  const getCells = (props: DualViewProps) => {
+    return props.cells.map((row, i) => row.map((content, j) => {
       return {
-        content: entry,
+        content: content,
         row: i,
         col: j,
         color: "rgb(255, 255, 255)",
@@ -46,28 +46,28 @@
   };
   const setSheetColors = async () => {
     await tick();
-    const diff = diffSheets(leftProps.entries, rightProps.entries);
+    const diff = diffSheets(leftProps.cells, rightProps.cells);
     // track index of earliest row for each half
     let min1 = Infinity;
     let min2 = Infinity;
     for (const [i1, i2] of diff.moved) {
-      for (let j = 0; j < leftProps.entries[i1].length; j++) {
+      for (let j = 0; j < leftProps.cells[i1].length; j++) {
         setCellColor[0](i1, j, { red: 90, green: 176, blue: 246 });
         min1 = Math.min(min1, i1);
       }
-      for (let j = 0; j < rightProps.entries[i2].length; j++) {
+      for (let j = 0; j < rightProps.cells[i2].length; j++) {
         setCellColor[1](i2, j, { red: 90, green: 176, blue: 246 });
         min2 = Math.min(min2, i2);
       }
     }
     for (const i of diff.added) {
-      for (let j = 0; j < rightProps.entries[i].length; j++) {
+      for (let j = 0; j < rightProps.cells[i].length; j++) {
         setCellColor[1](i, j, { red: 151, green: 202, blue: 114 });
         min2 = Math.min(min2, i);
       }
     }
     for (const i of diff.removed) {
-      for (let j = 0; j < leftProps.entries[i].length; j++) {
+      for (let j = 0; j < leftProps.cells[i].length; j++) {
         setCellColor[0](i, j, { red: 239, green: 95, blue: 107 });
         min1 = Math.min(min1, i);
       }
@@ -76,8 +76,8 @@
     const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
     scrollTop = newScrollTop === Infinity ? 0 : newScrollTop;
   };
-  $: leftProps.entries, setSheetColors();
-  $: rightProps.entries, setSheetColors();
+  $: leftProps.cells, setSheetColors();
+  $: rightProps.cells, setSheetColors();
   $: heights, maxHeight = Math.max(heights[0], heights[1]);
   onMount(() => {
     console.log("DualView mounted");
@@ -101,7 +101,7 @@
     on:scroll={setScroll}
   >
     <Sheet
-      entries={getEntries(leftProps)}
+      cells={getCells(leftProps)}
       bind:selected={selected}
       bind:maxHeight={maxHeight}
       bind:actualHeight={heights[0]}
@@ -116,7 +116,7 @@
     on:scroll={setScroll}
   >
     <Sheet
-      entries={getEntries(rightProps)}
+      cells={getCells(rightProps)}
       bind:selected={selected}
       bind:maxHeight={maxHeight}
       bind:actualHeight={heights[1]}

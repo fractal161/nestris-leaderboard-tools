@@ -1,7 +1,7 @@
 export type DualViewProps = {
     title: string,
     subtitle: string,
-    entries: Array<Array<string>>,
+    cells: Array<Array<string>>,
     key: string,
 }
 

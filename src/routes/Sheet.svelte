@@ -7,12 +7,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { SheetCellProps, RGBColor } from "../types/client";
-  import VirtualList from '@sveltejs/svelte-virtual-list';
-  export let entries: Array<Array<SheetCellProps>>;
-  //export let rowEntries: Array<{
-  //  index: number,
-  //  row: Array<string>
-  //}>;
+  export let cells: Array<Array<SheetCellProps>>;
   export let maxHeight: number;
   export let actualHeight: number;
   export let selected: [number, number] | undefined = undefined;
@@ -29,16 +24,16 @@
   };
   export const setCellColor = (i: number, j: number, color: RGBColor | undefined): void => {
     if (color === undefined) {
-      entries[i][j].color = "";
+      cells[i][j].color = "";
     }
     else {
-      entries[i][j].color = `background-color:rgb(${color.red},${color.green},${color.blue})`;
+      cells[i][j].color = `background-color:rgb(${color.red},${color.green},${color.blue})`;
     }
   }
   let selectorStyle: string;
   export const getRowHeight = (i: number): number => {
     if (i === Infinity) return Infinity;
-    const cell = entries[i]?.[0].elem;
+    const cell = cells[i]?.[0].elem;
     if (cell === undefined) {
       console.error(`Attempted to get row ${i} in getRowHeight`);
       return 0;
@@ -48,7 +43,7 @@
   const updateSelectorStyle = (): void => {
     if (selected === undefined) return;
     const [i, j] = selected;
-    let cellElem = entries[i][j].elem;
+    let cellElem = cells[i][j].elem;
     if (cellElem === undefined) {
       console.error(`Attempted to update location ${i}, ${j} in updateSelectorStyle`);
       return;
@@ -70,16 +65,7 @@
       updateSelectorStyle();
     }
   }
-  //const updateRowEntries = () => {
-  //  rowEntries = entries.map((row, i) => {
-  //    return {
-  //      index: i,
-  //      row: row,
-  //    };
-  //  });
-  //}
   $: selected, updateSelectorStyle();
-  //$: entries, updateRowEntries();
   onMount(() => {
     console.log("Sheet mounted");
   });
@@ -97,54 +83,38 @@
   <table bind:clientHeight={actualHeight}>
     <thead>
       <tr>
-        {#each entries[0] as entry, j}
+        {#each cells[0] as cell, j}
           <th
             role=cell
             tabindex=-1
-            bind:this={entry.elem}
+            bind:this={cell.elem}
             on:click={() => updateSelector(0, j)}
-            style={entry.color}
+            style={cell.color}
           >
-            {entry.content}
+            {cell.content}
           </th>
         {/each}
       </tr>
     </thead>
     <tbody>
-      {#each entries as row, i}
+      {#each cells as row, i}
         {#if i > 0}
           <tr>
-            {#each row as entry, j}
+            {#each row as cell, j}
               <td
                 role=cell
                 tabindex=-1
-                bind:this={entry.elem}
+                bind:this={cell.elem}
                 on:click={() => updateSelector(i, j)}
-                style={entry.color}
+                style={cell.color}
               >
-                {entry.content}
+                {cell.content}
               </td>
             {/each}
           </tr>
         {/if}
       {/each}
     </tbody>
-    <!--
-    <VirtualList items={rowEntries} let:item>
-      {console.log(rowEntries)}
-      <tr>
-        {#each item.value as entry, j}
-          <td
-            bind:this={cells[item.index+1][j]}
-            on:click={() => updateSelector(item.index+1, j)}
-            style={cellColors[item.index+1][j] == undefined ? "" :
-              `background-color:${cellColors[entry.index+1][j]};`
-            }
-          >{entry}</td>
-        {/each}
-      </tr>
-    </VirtualList>
-    -->
   </table>
 </div>
 

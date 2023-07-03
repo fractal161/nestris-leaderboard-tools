@@ -21,8 +21,8 @@ const parseCsvFile = async (filename: string): Promise<string[][]> => {
         parser.on("readable", () => {
             let row;
             while ((row = parser.read()) !== null) {
-                for (const entry of row) {
-                  if (entry !== "") {
+                for (const cell of row) {
+                  if (cell !== "") {
                     rows.push(row);
                     break;
                   }
@@ -39,7 +39,7 @@ export async function GET( req: RequestEvent ): Promise<Response> {
     // TODO: better error handling
     const id = req.url.searchParams.get("id") ?? assert.fail("id is null");
     const rev = req.url.searchParams.get("rev") ?? assert.fail("rev is null");
-    const entries = await parseCsvFile(`data/revs/${id}/${rev}.csv`);
+    const cells = await parseCsvFile(`data/revs/${id}/${rev}.csv`);
     const revNum = parseInt(rev);
     const context = timestamps[revNum];
     context.name = "";
@@ -53,7 +53,7 @@ export async function GET( req: RequestEvent ): Promise<Response> {
       }
     }
     return json({
-        entries: entries,
+        cells: cells,
         context: context,
     });
   } catch (err) {

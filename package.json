@@ -33,7 +33,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/svelte-virtual-list": "^3.0.1",
 		"csv-parse": "^5.4.0",
 		"diff": "^5.1.0",
 		"object-hash": "^3.0.0"

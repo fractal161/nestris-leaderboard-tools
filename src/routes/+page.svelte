@@ -1,6 +1,6 @@
 <script lang="ts">
   import DualView from "./DualView.svelte";
-  import type { SheetProps } from "../types/client";
+  import type { DualViewProps } from "../types/client";
   import type { PageServerData } from "./$types";
   import { onMount } from "svelte";
   export let data: PageServerData;
@@ -22,17 +22,17 @@
   let mode = "leaderboard";
   let menuIndex: number;
 
-  let props: Array<SheetProps> = [
+  let props: Array<DualViewProps> = [
     {
       title: "",
       subtitle: "",
-      entries: [ [ ] ],
+      cells: [ [ ] ],
       key: "",
     },
     {
       title: "",
       subtitle: "",
-      entries: [ [ ] ],
+      cells: [ [ ] ],
       key: "",
     },
   ];
@@ -63,11 +63,11 @@
       if (sheetFetch.status != 200) {
         throw Error("error fetching sheet");
       }
-      const { entries, context } = await sheetFetch.json();
+      const { cells, context } = await sheetFetch.json();
       props[index] = {
         title: rev.toString() + ": " + context.name,
         subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
-        entries: entries,
+        cells: cells,
         key: rev.toString(),
       };
     }

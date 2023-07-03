@@ -19,7 +19,7 @@
 
 <div class="parent" bind:this={main} on:scroll>
   <div class="child">
-    <slot/>
+    <slot scrollTop={scrollTop} scrollLeft={scrollLeft}/>
   </div>
   <div class="scrollspace"></div>
 </div>

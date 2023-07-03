@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import type { RGBColor, DualViewProps } from "../types/client";
+  import type { RGBColor, DualViewProps, SheetCellProps } from "../types/client";
   import { diffSheets } from "../lib/diff";
   import SheetView from "./SheetView.svelte";
   import Sheet from "./Sheet.svelte";
@@ -24,15 +24,18 @@
     key: ""
   };
 
+  let leftCells: Array<Array<SheetCellProps>> = [[]];
+  let rightCells: Array<Array<SheetCellProps>> = [[]];
+
   let selected: [number, number] | undefined = undefined;
 
-  const getCells = (props: DualViewProps) => {
+  const getSheetCells = (props: DualViewProps) => {
     return props.cells.map((row, i) => row.map((content, j) => {
       return {
         content: content,
         row: i,
         col: j,
-        color: "rgb(255, 255, 255)",
+        color: "background-color:rgb(255, 255, 255)",
       }
     }));
   }
@@ -45,7 +48,6 @@
     }
   };
   const setSheetColors = async () => {
-    await tick();
     const diff = diffSheets(leftProps.cells, rightProps.cells);
     // track index of earliest row for each half
     let min1 = Infinity;
@@ -74,10 +76,15 @@
     }
     // scroll to show the earliest colored row
     const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
-    scrollTop = newScrollTop === Infinity ? 0 : newScrollTop;
+    scrollTop = newScrollTop === Infinity ? 0 : Math.max(newScrollTop, 0);
   };
-  $: leftProps.cells, setSheetColors();
-  $: rightProps.cells, setSheetColors();
+  const updateSheetState = async (left: DualViewProps, right: DualViewProps) => {
+    leftCells = getSheetCells(left);
+    rightCells = getSheetCells(right);
+    await tick();
+    await setSheetColors();
+  };
+  $: updateSheetState(leftProps, rightProps);
   $: heights, maxHeight = Math.max(heights[0], heights[1]);
   onMount(() => {
     console.log("DualView mounted");
@@ -101,7 +108,7 @@
     on:scroll={setScroll}
   >
     <Sheet
-      cells={getCells(leftProps)}
+      cells={leftCells}
       bind:selected={selected}
       bind:maxHeight={maxHeight}
       bind:actualHeight={heights[0]}
@@ -116,7 +123,7 @@
     on:scroll={setScroll}
   >
     <Sheet
-      cells={getCells(rightProps)}
+      cells={rightCells}
       bind:selected={selected}
       bind:maxHeight={maxHeight}
       bind:actualHeight={heights[1]}

@@ -4,10 +4,12 @@
   import { diffSheets } from "../lib/diff";
   import SheetView from "./SheetView.svelte";
   import Sheet from "./Sheet.svelte";
-  export let scrollLeft = 0;
-  export let scrollTop = 0;
-  let setCellColor: Array<(i: number, j: number, color: RGBColor) => void> = [];
+  let scrollLeft = 0;
+  let scrollTop = 0;
+  let setCellColor: Array<(i: number, j: number, color: RGBColor | undefined) => void> = [];
   let getRowHeight: Array<(i: number) => number> = [];
+  let heights: Array<number> = [];
+  let maxHeight: number;
   export let leftProps: DualViewProps = {
     title: "",
     subtitle: "",
@@ -24,7 +26,7 @@
 
   let selected: [number, number] | undefined = undefined;
 
-  const getSheetProps = (props: DualViewProps) => {
+  const getEntries = (props: DualViewProps) => {
     return props.entries.map((row, i) => row.map((entry, j) => {
       return {
         content: entry,
@@ -71,12 +73,12 @@
       }
     }
     // scroll to show the earliest colored row
-    if (min1 === Infinity) min1 = 0;
-    if (min2 === Infinity) min2 = 0;
-    scrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
+    const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
+    scrollTop = newScrollTop === Infinity ? 0 : newScrollTop;
   };
   $: leftProps.entries, setSheetColors();
   $: rightProps.entries, setSheetColors();
+  $: heights, maxHeight = Math.max(heights[0], heights[1]);
   onMount(() => {
     console.log("DualView mounted");
   });
@@ -99,8 +101,10 @@
     on:scroll={setScroll}
   >
     <Sheet
-      entries={getSheetProps(leftProps)}
+      entries={getEntries(leftProps)}
       bind:selected={selected}
+      bind:maxHeight={maxHeight}
+      bind:actualHeight={heights[0]}
       bind:setCellColor={setCellColor[0]}
       bind:getRowHeight={getRowHeight[0]}
     />
@@ -112,8 +116,10 @@
     on:scroll={setScroll}
   >
     <Sheet
-      entries={getSheetProps(rightProps)}
+      entries={getEntries(rightProps)}
       bind:selected={selected}
+      bind:maxHeight={maxHeight}
+      bind:actualHeight={heights[1]}
       bind:setCellColor={setCellColor[1]}
       bind:getRowHeight={getRowHeight[1]}
     />

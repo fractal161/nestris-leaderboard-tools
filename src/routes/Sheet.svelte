@@ -13,9 +13,8 @@
   //  index: number,
   //  row: Array<string>
   //}>;
-  let cells: Array<Array<HTMLTableCellElement>> = Array.from(
-    Array(entries.length+1), () => []
-  );
+  export let maxHeight: number;
+  export let actualHeight: number;
   export let selected: [number, number] | undefined = undefined;
   let selector: {
     top: number;
@@ -28,14 +27,20 @@
     width: 0,
     height: 0,
   };
-  export const setCellColor = (i: number, j: number, color: RGBColor): void => {
-    entries[i][j].color = `rgb(${color.red},${color.green},${color.blue})`;
+  export const setCellColor = (i: number, j: number, color: RGBColor | undefined): void => {
+    if (color === undefined) {
+      entries[i][j].color = "";
+    }
+    else {
+      entries[i][j].color = `background-color:rgb(${color.red},${color.green},${color.blue})`;
+    }
   }
   let selectorStyle: string;
   export const getRowHeight = (i: number): number => {
+    if (i === Infinity) return Infinity;
     const cell = entries[i]?.[0].elem;
     if (cell === undefined) {
-      console.log(`Attempted to get row ${i} in getRowHeight`);
+      console.error(`Attempted to get row ${i} in getRowHeight`);
       return 0;
     }
     return cell.offsetTop;
@@ -45,7 +50,7 @@
     const [i, j] = selected;
     let cellElem = entries[i][j].elem;
     if (cellElem === undefined) {
-      console.log(`Attempted to update location ${i}, ${j} in updateSelectorStyle`);
+      console.error(`Attempted to update location ${i}, ${j} in updateSelectorStyle`);
       return;
     }
     selector.top = cellElem.offsetTop-1;
@@ -80,13 +85,16 @@
   });
 </script>
 
-<div class="wrapper">
+<div
+  class="wrapper"
+  style={maxHeight === undefined ? "" : `height: ${maxHeight+10}px`}
+>
   <div
     class={selected === undefined ? "hidden" : "selector"}
     style={selectorStyle}
   >
   </div>
-  <table>
+  <table bind:clientHeight={actualHeight}>
     <thead>
       <tr>
         {#each entries[0] as entry, j}
@@ -95,9 +103,7 @@
             tabindex=-1
             bind:this={entry.elem}
             on:click={() => updateSelector(0, j)}
-            style={entry.color == undefined ? "" :
-              `background-color:${entry.color};`
-            }
+            style={entry.color}
           >
             {entry.content}
           </th>
@@ -114,9 +120,7 @@
                 tabindex=-1
                 bind:this={entry.elem}
                 on:click={() => updateSelector(i, j)}
-                style={entry.color == undefined ? "" :
-                  `background-color:${entry.color};`
-                }
+                style={entry.color}
               >
                 {entry.content}
               </td>
@@ -124,7 +128,7 @@
           </tr>
         {/if}
       {/each}
-    <tbody>
+    </tbody>
     <!--
     <VirtualList items={rowEntries} let:item>
       {console.log(rowEntries)}

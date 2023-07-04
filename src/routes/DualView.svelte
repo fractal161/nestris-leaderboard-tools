@@ -8,8 +8,6 @@
   let scrollTop = 0;
   let setCellColor: Array<(i: number, j: number, color: RGBColor | undefined) => void> = [];
   let getRowHeight: Array<(i: number) => number> = [];
-  let heights: Array<number> = [];
-  let maxHeight: number | undefined;
   let viewHeight: number;
   let mounted = false;
   export let leftProps: DualViewProps = {
@@ -79,21 +77,15 @@
     // scroll to show the earliest colored row
     const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
     scrollTop = newScrollTop === Infinity ? 0 : Math.max(newScrollTop, 0);
-    if (maxHeight === undefined) return;
-    scrollTop = Math.min(scrollTop, maxHeight-viewHeight);
   };
   const updateSheetState = async (left: DualViewProps, right: DualViewProps) => {
     leftCells = getSheetCells(left);
     rightCells = getSheetCells(right);
-    maxHeight = undefined;
     // wait for each view to show new table
-    await tick();
-    maxHeight = Math.max(heights[0], heights[1])+10;
     await tick();
     // wait for each view to share the max height
     await setSheetColors();
   };
-  $: heights, maxHeight = Math.max(heights[0], heights[1])+10;
   $: if (mounted) updateSheetState(leftProps, rightProps);
   onMount(() => {
     mounted = true;
@@ -123,8 +115,6 @@
       scrollTop={scrollTop}
       viewHeight={viewHeight}
       bind:selected={selected}
-      bind:maxHeight={maxHeight}
-      bind:actualHeight={heights[0]}
       bind:setCellColor={setCellColor[0]}
       bind:getRowHeight={getRowHeight[0]}
     />
@@ -141,8 +131,6 @@
       scrollTop={scrollTop}
       viewHeight={viewHeight}
       bind:selected={selected}
-      bind:maxHeight={maxHeight}
-      bind:actualHeight={heights[1]}
       bind:setCellColor={setCellColor[1]}
       bind:getRowHeight={getRowHeight[1]}
     />

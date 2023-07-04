@@ -9,8 +9,6 @@
   import { onMount, tick } from "svelte";
   import type { SheetCellProps, RGBColor } from "../types/client";
   export let cells: Array<Array<SheetCellProps>>;
-  export let maxHeight: number | undefined;
-  export let actualHeight: number;
   export let selected: [number, number] | undefined = undefined;
   let topPad = 0;
   let bottomPad = 0;
@@ -85,11 +83,13 @@
     if (cells[0][0].elem === undefined) return;
     const thHeight = cells[0][0].elem.getBoundingClientRect().height-1;
     const tdHeight = thHeight + 5;
-    const startIndex = Math.max(Math.floor((scrollTop - thHeight) / tdHeight) - 2, 1);
-    const endIndex = Math.min(Math.floor((scrollTop + viewHeight) / tdHeight) + 2, cells.length);
+    const startIndex = Math.max(Math.floor((scrollTop - thHeight) / tdHeight) - 9, 1);
+    const endIndex = Math.min(Math.floor((scrollTop + viewHeight) / tdHeight) + 9, cells.length);
+    // TODO: the +1 is a hack to make scrolling nice when a new row is added
+    // to the bottom, maybe better to share a maxRowCount prop across both
     [ topPad, bottomPad, visibleRows ] = [
       tdHeight * (startIndex-1),
-      tdHeight * (cells.length - endIndex),
+      tdHeight * (cells.length - endIndex + 1),
       cells.slice(startIndex, endIndex)
     ];
     await tick();
@@ -102,10 +102,7 @@
   });
 </script>
 
-<div
-  class="wrapper"
-  style={maxHeight === undefined ? "" : `height: ${maxHeight}px`}
->
+<div class="wrapper">
   <div
     class={selected === undefined ? "hidden" : "selector"}
     style={selectorStyle}
@@ -115,7 +112,7 @@
                padding-top: ${topPad}px;
                padding-bottom: ${bottomPad+10}px`
   }>
-  <table bind:clientHeight={actualHeight}>
+  <table>
     <thead>
       <tr>
         {#each cells[0] as cell}
@@ -177,11 +174,5 @@
     border: 2px solid blue;
     pointer-events: none;
     z-index: 1;
-  }
-  .spacer {
-    box-sizing: border-box;
-    margin: 0px;
-    padding: 0px;
-    border: none;
   }
 </style>

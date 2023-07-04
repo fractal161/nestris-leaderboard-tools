@@ -2,15 +2,22 @@
   Contains a table and supports the following features:
     - one cell is able to be marked as unselected
     - colors of each cell can be set (to show differing files)
+  Virtual list part inspired by https://github.com/sveltejs/svelte-virtual-list/blob/master/VirtualList.svelte
 -->
 
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import type { SheetCellProps, RGBColor } from "../types/client";
   export let cells: Array<Array<SheetCellProps>>;
-  export let maxHeight: number;
+  export let maxHeight: number | undefined;
   export let actualHeight: number;
   export let selected: [number, number] | undefined = undefined;
+  let topPad = 0;
+  let bottomPad = 0;
+  let visibleRows: Array<Array<SheetCellProps>> = [[]];
+  export let scrollTop: number;
+  export let viewHeight: number;
+  let mounted = false;
   let selector: {
     top: number;
     left: number;
@@ -29,17 +36,15 @@
     else {
       cells[i][j].color = `background-color:rgb(${color.red},${color.green},${color.blue})`;
     }
-  }
+  };
   let selectorStyle: string;
   export const getRowHeight = (i: number): number => {
     if (i === Infinity) return Infinity;
-    const cell = cells[i]?.[0].elem;
-    if (cell === undefined) {
-      console.error(`Attempted to get row ${i} in getRowHeight`);
-      return 0;
-    }
-    return cell.offsetTop;
-  }
+    if (cells[0][0].elem === undefined) return Infinity;
+    const thHeight = cells[0][0].elem.getBoundingClientRect().height;
+    const tdHeight = thHeight + 4;
+    return thHeight + tdHeight * (i-1);
+  };
   const updateSelectorStyle = (): void => {
     if (selected === undefined) return;
     const [i, j] = selected;
@@ -55,7 +60,7 @@
     selectorStyle = `left: ${selector.left}px;
       top: ${selector.top}px; width: ${selector.width}px;
       height: ${selector.height}px`;
-  }
+  };
   const updateSelector = (i: number, j: number): void => {
     if (selected !== undefined && selected[0] === i && selected[1] === j) {
       selected = undefined;
@@ -64,31 +69,61 @@
       selected = [i, j];
       updateSelectorStyle();
     }
-  }
+  };
+  // only render the rows already seen
+  const refresh = async (cells: Array<Array<SheetCellProps>>, scrollTop: number) => {
+    await tick();
+    if (cells.length < 2) {
+      visibleRows = cells.slice(1);
+      topPad = 0;
+      bottomPad = 0;
+      return;
+    }
+    // visible range is around scrollTop to scrollTop + viewHeight
+    // main idea: make each row the same height, so computations can be fixed
+    // start by rendering the first row so actual height can be measured
+    if (cells[0][0].elem === undefined) return;
+    const thHeight = cells[0][0].elem.getBoundingClientRect().height-1;
+    const tdHeight = thHeight + 5;
+    const startIndex = Math.max(Math.floor((scrollTop - thHeight) / tdHeight) - 2, 1);
+    const endIndex = Math.min(Math.floor((scrollTop + viewHeight) / tdHeight) + 2, cells.length);
+    [ topPad, bottomPad, visibleRows ] = [
+      tdHeight * (startIndex-1),
+      tdHeight * (cells.length - endIndex),
+      cells.slice(startIndex, endIndex)
+    ];
+    await tick();
+  };
   $: selected, updateSelectorStyle();
+  $: if(mounted) refresh(cells, scrollTop);
   onMount(() => {
+    mounted = true;
     console.log("Sheet mounted");
   });
 </script>
 
 <div
   class="wrapper"
-  style={maxHeight === undefined ? "" : `height: ${maxHeight+10}px`}
+  style={maxHeight === undefined ? "" : `height: ${maxHeight}px`}
 >
   <div
     class={selected === undefined ? "hidden" : "selector"}
     style={selectorStyle}
   >
   </div>
+  <div style={`border: none;
+               padding-top: ${topPad}px;
+               padding-bottom: ${bottomPad+10}px`
+  }>
   <table bind:clientHeight={actualHeight}>
     <thead>
       <tr>
-        {#each cells[0] as cell, j}
+        {#each cells[0] as cell}
           <th
             role=cell
             tabindex=-1
             bind:this={cell.elem}
-            on:click={() => updateSelector(0, j)}
+            on:click={() => updateSelector(0, cell.col)}
             style={cell.color}
           >
             {cell.content}
@@ -97,25 +132,22 @@
       </tr>
     </thead>
     <tbody>
-      {#each cells as row, i}
-        {#if i > 0}
-          <tr>
-            {#each row as cell, j}
-              <td
-                role=cell
-                tabindex=-1
-                bind:this={cell.elem}
-                on:click={() => updateSelector(i, j)}
-                style={cell.color}
-              >
-                {cell.content}
-              </td>
-            {/each}
-          </tr>
-        {/if}
+      {#each visibleRows as row}
+        <tr>
+          {#each row as cell}
+            <td
+              bind:this={cell.elem}
+              on:click={() => updateSelector(cell.row, cell.col)}
+              style={cell.color}
+            >
+              {cell.content}
+            </td>
+          {/each}
+        </tr>
       {/each}
     </tbody>
   </table>
+  </div>
 </div>
 
 <style>
@@ -124,7 +156,13 @@
     font-size: 10px;
   }
   td, th {
+    box-sizing: border-box;
     border: 1px solid gray;
+    white-space: nowrap;
+  }
+  td {
+    padding-top: 3px;
+    padding-bottom: 3px;
   }
   .wrapper {
     position: relative;
@@ -138,5 +176,12 @@
     position: absolute;
     border: 2px solid blue;
     pointer-events: none;
+    z-index: 1;
+  }
+  .spacer {
+    box-sizing: border-box;
+    margin: 0px;
+    padding: 0px;
+    border: none;
   }
 </style>

@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   export let scrollTop = 0;
   export let scrollLeft = 0;
+  export let height;
   let main: HTMLDivElement;
   const setScroll = () => {
     if (main === undefined) return;
@@ -17,9 +18,9 @@
   });
 </script>
 
-<div class="parent" bind:this={main} on:scroll>
+<div class="parent" bind:this={main} bind:clientHeight={height} on:scroll>
   <div class="child">
-    <slot scrollTop={scrollTop} scrollLeft={scrollLeft}/>
+    <slot/>
   </div>
   <div class="scrollspace"></div>
 </div>

@@ -9,7 +9,9 @@
   let setCellColor: Array<(i: number, j: number, color: RGBColor | undefined) => void> = [];
   let getRowHeight: Array<(i: number) => number> = [];
   let heights: Array<number> = [];
-  let maxHeight: number;
+  let maxHeight: number | undefined;
+  let viewHeight: number;
+  let mounted = false;
   export let leftProps: DualViewProps = {
     title: "",
     subtitle: "",
@@ -77,16 +79,24 @@
     // scroll to show the earliest colored row
     const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
     scrollTop = newScrollTop === Infinity ? 0 : Math.max(newScrollTop, 0);
+    if (maxHeight === undefined) return;
+    scrollTop = Math.min(scrollTop, maxHeight-viewHeight);
   };
   const updateSheetState = async (left: DualViewProps, right: DualViewProps) => {
     leftCells = getSheetCells(left);
     rightCells = getSheetCells(right);
+    maxHeight = undefined;
+    // wait for each view to show new table
     await tick();
+    maxHeight = Math.max(heights[0], heights[1])+10;
+    await tick();
+    // wait for each view to share the max height
     await setSheetColors();
   };
-  $: updateSheetState(leftProps, rightProps);
-  $: heights, maxHeight = Math.max(heights[0], heights[1]);
+  $: heights, maxHeight = Math.max(heights[0], heights[1])+10;
+  $: if (mounted) updateSheetState(leftProps, rightProps);
   onMount(() => {
+    mounted = true;
     console.log("DualView mounted");
   });
 </script>
@@ -105,10 +115,13 @@
   <SheetView
     bind:scrollTop={scrollTop}
     bind:scrollLeft={scrollLeft}
+    bind:height={viewHeight}
     on:scroll={setScroll}
   >
     <Sheet
       cells={leftCells}
+      scrollTop={scrollTop}
+      viewHeight={viewHeight}
       bind:selected={selected}
       bind:maxHeight={maxHeight}
       bind:actualHeight={heights[0]}
@@ -120,10 +133,13 @@
   <SheetView
     bind:scrollTop={scrollTop}
     bind:scrollLeft={scrollLeft}
+    bind:height={viewHeight}
     on:scroll={setScroll}
   >
     <Sheet
       cells={rightCells}
+      scrollTop={scrollTop}
+      viewHeight={viewHeight}
       bind:selected={selected}
       bind:maxHeight={maxHeight}
       bind:actualHeight={heights[1]}

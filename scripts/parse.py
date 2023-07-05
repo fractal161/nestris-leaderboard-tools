@@ -1,6 +1,8 @@
+from json.encoder import INFINITY
 import lxml.html
 import gzip
 import json
+import hashlib
 import csv
 from multiprocessing import Pool
 from collections import OrderedDict
@@ -110,6 +112,53 @@ def write_csv(i, gid):
                 [e for t in [get_csv_entry(td, i) for td in row.iter(tag='td')] for e in t]
                 for row in table.iter(tag='tr')
             ])
+
+# taken from https://www.programiz.com/python-programming/examples/hash-file lmao
+def hash_file(filename):
+    """"This function returns the SHA-1 hash
+    of the file passed into it"""
+
+    # make a hash object
+    h = hashlib.sha1()
+
+    # open file for reading in binary mode
+    with open(filename,'rb') as file:
+
+        # loop till the end of the file
+        chunk = 0
+        while chunk != b'':
+            # read only 1024 bytes at a time
+            chunk = file.read(1024)
+            h.update(chunk)
+
+    # return the hex representation of digest
+    return h.hexdigest()
+
+def get_unique_csv_revs(gid):
+    with open('data/sheet_history.json', 'r') as infile:
+        history = json.load(infile)
+        if gid not in history:
+            raise ValueError('invalid gid')
+        editions = history[gid]
+        start, end = editions[0]['start'], editions[0]['end']
+        for edition in editions:
+            start = min(start, edition['start'])
+            end = max(end, edition['end'])
+        unique_revs = [start]
+        filehash = hash_file(f'data/revs/{gid}/{start}.csv')
+        for i in tqdm.tqdm(range(start+1, end+1)):
+            newhash = hash_file(f'data/revs/{gid}/{i}.csv')
+            if filehash != newhash:
+                unique_revs.append(i)
+            filehash = newhash
+        print(len(unique_revs), 'distinct revisions')
+        with open(f'data/revs/{gid}/unique_revs.json', 'w') as outfile:
+            json.dump(unique_revs, outfile)
+
+    # open sheet_history to get start/end revisions
+    # add first revision to array
+    # compare adjacent hashes, if the second is distinct, add it to array
+    # write array to file using json or something
 
 def get_csv_entry(tag, i):
     text = ''

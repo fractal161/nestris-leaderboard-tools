@@ -67,16 +67,27 @@ def get_spreadsheet_history():
     with open('data/sheet_history.json', 'w') as f:
         json.dump(sheet_history, f, indent=2)
 
+# needed so pool.imap_unordered is happy
+class CsvWriter(object):
+    def __init__(self, gid):
+        self.gid = gid
+    def __call__(self, i):
+        write_csv(i, self.gid)
 
-def write_all_csvs():
+def write_all_csvs(gid, min_rev, max_rev):
+    min_rev = int(min_rev)
+    max_rev = int(max_rev)
+    if not os.path.exists(f'data/revs/{gid}'):
+        os.makedirs(f'data/revs/{gid}')
     pool = Pool()
-    MAX = 39067
-    MIN = 853
-    for _ in tqdm.tqdm(pool.imap_unordered(write_csv, range(MIN, MAX)), total=MAX-MIN):
+    for _ in tqdm.tqdm(pool.imap_unordered(
+        CsvWriter(gid),
+        range(min_rev, max_rev+1)
+    ), total=max_rev-min_rev+1):
         pass
 
-def write_csv(i):
-    with open(f'data/raws/1078039113/{i}.html.gz', 'rb') as f:
+def write_csv(i, gid):
+    with open(f'data/raws/{gid}/{i}.html.gz', 'rb') as f:
         content = gzip.decompress(f.read())
         # try getting rid of fluff
         content = re.sub(b' tabindex="-1"', b'', content)
@@ -93,7 +104,7 @@ def write_csv(i):
         tree = lxml.html.fromstring(str(content, encoding='utf-8'))
         table = tree.find('.//table/tbody')
         assert(table != None)
-        with open(f'data/revs/1078039113/{i}.csv', 'w') as g:
+        with open(f'data/revs/{gid}/{i}.csv', 'w') as g:
             writer = csv.writer(g)
             writer.writerows([
                 [e for t in [get_csv_entry(td, i) for td in row.iter(tag='td')] for e in t]

@@ -29,18 +29,19 @@
   .child {
     display: inline-block;
     position: relative;
+    min-width: 100%;
+    flex-shrink: 0;
   }
   .parent {
     position: relative;
     display: flex;
     flex-direction: row;
-    box-sizing: block;
     box-shadow: inset 1px 1px 1px gray, inset -1px -1px 1px gray;
     overflow: scroll;
   }
   .scrollspace {
     position: sticky;
-    border: 1px solid red;
+    border: 1px solid darkgrey;
     top: 0px;
     right: 0px;
     background-color: lightgrey;

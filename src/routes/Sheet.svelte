@@ -163,6 +163,7 @@
   }
   .wrapper {
     position: relative;
+    width: max-content;
   }
   .hidden {
     position: absolute;

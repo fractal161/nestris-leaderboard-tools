@@ -21,6 +21,7 @@
   let menuBoard = "";
   let mode = "leaderboard";
   let menuIndex: number;
+  let showUnique = true;
 
   let props: Array<DualViewProps> = [
     {
@@ -244,6 +245,8 @@
       {/each}
       </select>
     {/if}
+    <p>Hide identical revisions:</p>
+    <input type="checkbox" bind:checked={showUnique}>
   </div>
 </div>
 

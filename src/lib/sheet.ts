@@ -19,12 +19,7 @@ const parseCsvFile = async (filename: string): Promise<string[][]> => {
         parser.on("readable", () => {
             let row;
             while ((row = parser.read()) !== null) {
-                for (const cell of row) {
-                  if (cell !== "") {
-                    rows.push(row);
-                    break;
-                  }
-                }
+                rows.push(row);
             }
         });
         parser.on("error", (err) => reject(err));
@@ -37,6 +32,13 @@ export const getSheetRev = async (id: string, rev: number): Promise<Sheet> => {
   const history = histories[id];
   context.name = "";
   const cells = await parseCsvFile(`data/revs/${id}/${rev}.csv`);
+  // strip out excessive empty rows
+  const rowIsEmpty = (row: Array<string>) => row.every(cell => cell === "");
+  let i = cells.length - 1;
+  while (i >= 0 && rowIsEmpty(cells[i])) {
+      i--;
+  }
+  i++;
   if (history !== undefined) {
     for (const interval of history) {
       if (interval.start <= rev && rev <= interval.end) {
@@ -46,7 +48,7 @@ export const getSheetRev = async (id: string, rev: number): Promise<Sheet> => {
     }
   }
   return {
-    cells: cells,
+    cells: cells.slice(0, i).concat([[(cells.length-i).toString(), "empty rows"]]),
     context: context,
     rev: rev,
   };

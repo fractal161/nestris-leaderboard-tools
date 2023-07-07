@@ -156,10 +156,12 @@
     box-sizing: border-box;
     border: 1px solid gray;
     white-space: nowrap;
+    height: 12px; /* kinda bad but works for now */
   }
   td {
     padding-top: 3px;
     padding-bottom: 3px;
+    height: 18px; /* kinda bad but works for now */
   }
   .wrapper {
     position: relative;

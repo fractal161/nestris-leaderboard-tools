@@ -1,5 +1,5 @@
 import hash from "object-hash";
-import { diffArrays } from "diff";
+import { diffArrays, type ArrayChange } from "diff";
 
 /**
   * STRATEGY
@@ -12,6 +12,7 @@ import { diffArrays } from "diff";
   * moved: array of pairs denoting the start/end indices of a row that moved
   * added: indices of array2 corresponding to rows not present in array1
   * removed: indices of array1 corresponding to rows not present in array2
+  * modified: array consisting of 
   */
 export const diffSheets = (
     array1: Array<Array<string>>,
@@ -19,7 +20,17 @@ export const diffSheets = (
 ): {
     moved: Array<[number, number]>,
     added: Array<number>,
-    removed: Array<number>
+    removed: Array<number>,
+    modified: Array<{
+        removed: {
+            rowIndex: number,
+            indices: Array<number>,
+        },
+        added: {
+            rowIndex: number,
+            indices: Array<number>,
+        },
+    }>
 }=> {
     const hash1 = array1.map((row) => hash(row.slice(1)));
     const hash2 = array2.map((row) => hash(row.slice(1)));
@@ -58,6 +69,16 @@ export const diffSheets = (
     const moved: Array<[number, number]> = [];
     const added: Array<number> = [];
     const removed: Array<number> = [];
+    const modified: Array<{
+        removed: {
+            rowIndex: number,
+            indices: Array<number>,
+        },
+        added: {
+            rowIndex: number,
+            indices: Array<number>,
+        },
+    }> = [];
     // if both maps have a common entry, that means the row was moved
     // otherwise, it was truly deleted
     for (const [key, index1] of map1) {
@@ -74,9 +95,63 @@ export const diffSheets = (
             added.push(index);
         }
     }
+    // it's pretty common to only change a single entry, so we handle that
+    // specifically here
+    if (added.length === 1 && removed.length === 1) {
+        const oldIndex = removed[0];
+        const newIndex = added[0];
+        if (oldIndex === undefined || newIndex === undefined) {
+            throw Error;
+        }
+        const oldRow = array1[oldIndex];
+        const newRow = array2[newIndex];
+        if (oldRow === undefined || newRow === undefined) {
+            throw Error;
+        }
+        const diff = diffArrays(oldRow, newRow);
+        const mod = {
+            removed: {
+                rowIndex: oldIndex,
+                indices: [] as Array<number>,
+            },
+            added: {
+                rowIndex: newIndex,
+                indices: [] as Array<number>,
+            },
+        };
+        index1 = 0;
+        index2 = 0;
+        for (const change of diff) {
+            if (change.count === undefined) throw Error("no count");
+            // present in newRow but not oldRow
+            if (change.added) {
+                for (const _ of change.value) {
+                    mod.added.indices.push(index2);
+                    index2++;
+                }
+            }
+            // present in oldRow but not newRow
+            else if (change.removed) {
+                for (const _ of change.value) {
+                    mod.removed.indices.push(index1);
+                    index1++;
+                }
+            }
+            // present in both
+            else {
+                index1 += change.count;
+                index2 += change.count;
+            }
+        }
+        modified.push(mod);
+        // hack to pretend both arrays are empty
+        added.length = 0;
+        removed.length = 0;
+    }
     return {
         moved,
         added,
         removed,
+        modified,
     };
 };

@@ -50,6 +50,7 @@
   const setSheetColors = async () => {
     const diff = diffSheets(leftProps.cells, rightProps.cells);
     // track index of earliest row for each half
+    // very light blue: 174, 216, 251
     let min1 = Infinity;
     let min2 = Infinity;
     for (const [i1, i2] of diff.moved) {
@@ -73,6 +74,27 @@
         setCellColor[0](i, j, { red: 239, green: 95, blue: 107 });
         min1 = Math.min(min1, i);
       }
+    }
+    for (const mod of diff.modified) {
+      // to be lazy, start by setting everything to light blue,
+      // then set the changes
+      const newIndex = mod.added.rowIndex;
+      for (let j = 0; j < leftProps.cells[newIndex].length; j++) {
+        setCellColor[1](newIndex, j, { red: 174, green: 216, blue: 251 });
+      }
+      for (const j of mod.added.indices) {
+        setCellColor[1](newIndex, j, { red: 151, green: 202, blue: 114 });
+      }
+      const oldIndex = mod.removed.rowIndex;
+      for (let j = 0; j < leftProps.cells[oldIndex].length; j++) {
+        setCellColor[0](oldIndex, j, { red: 174, green: 216, blue: 251 });
+      }
+      for (const j of mod.removed.indices) {
+        setCellColor[0](oldIndex, j, { red: 239, green: 95, blue: 107 });
+      }
+      // update min row for scroll
+      min1 = Math.min(min1, oldIndex);
+      min2 = Math.min(min2, newIndex);
     }
     // scroll to show the earliest colored row
     const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;

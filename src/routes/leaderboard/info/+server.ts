@@ -9,7 +9,7 @@ export async function GET( req: RequestEvent ): Promise<Response> {
   try {
     // TODO: better error handling
     const name = req.url.searchParams.get("name") ?? assert.fail("no name provided");
-    const unique = Boolean(req.url.searchParams.get("unique")) ?? false;
+    const unique = req.url.searchParams.get("unique") === "true";
     if (unique) {
       return json({
         count: await getUniqueCount(name)

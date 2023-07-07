@@ -138,7 +138,12 @@
       await updateProps();
     }
   };
-  const updateInterval = async (): Promise<void> => {
+  const updateInterval = async (
+    menuGid: string,
+    menuBoard: string,
+    mode: string,
+    showUnique: boolean,
+  ): Promise<void> => {
     if (menuGid === undefined) return;
     if (mode === "sheet") {
       const sheetCountFetch = await fetch("/sheet/info?" + new URLSearchParams({
@@ -198,10 +203,7 @@
   });
   $: currentIndex, updateProps();
   $: currentIndex, menuIndex = currentIndex;
-  $: menuGid, updateInterval();
-  $: menuBoard, updateInterval();
-  $: mode, updateInterval();
-  $: showUnique, updateInterval();
+  $: updateInterval(menuGid, menuBoard, mode, showUnique);
 </script>
 
 <div id=layout>

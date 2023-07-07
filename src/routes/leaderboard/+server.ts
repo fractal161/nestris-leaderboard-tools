@@ -4,7 +4,6 @@ import { error, json } from "@sveltejs/kit";
 import assert from "node:assert";
 import { getSheetRev } from "$lib/sheet";
 
-const histories = JSON.parse(fs.readFileSync('data/sheet_history.json').toString());
 const leaderboards = JSON.parse(fs.readFileSync('data/leaderboards.json').toString());
 
 export async function GET( req: RequestEvent ): Promise<Response> {
@@ -12,7 +11,7 @@ export async function GET( req: RequestEvent ): Promise<Response> {
     // TODO: better error handling
     const name = req.url.searchParams.get("name") ?? assert.fail("name is null");
     const index = req.url.searchParams.get("index") ?? assert.fail("index is null");
-    const unique = Boolean(req.url.searchParams.get("unique")) ?? false;
+    const unique = req.url.searchParams.get("unique") === "true";
     let indexNum = parseInt(index);
     const leaderboard = leaderboards[name];
     assert(leaderboard !== undefined, "leaderboard name not found");

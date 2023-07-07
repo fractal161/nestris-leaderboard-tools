@@ -1,3 +1,15 @@
+export type Sheet = {
+    cells: Array<Array<string>>,
+    context: SheetContext,
+    rev: number,
+}
+
+export type SheetContext = {
+    name: string,
+    time?: number,
+    editors?: Array<string>,
+}
+
 export type DualViewProps = {
     title: string,
     subtitle: string,

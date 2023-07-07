@@ -49,12 +49,13 @@
     return `${mm}/${d}/${y} ${h}:${m}:${s} UTC`;
   };
 
-  const updateSheet = async (index: number, id: string, rev: number | undefined): Promise<void> => {
-    if (rev == undefined) return;
+  const fetchSheetByIndex = async (view: number, id: string, index: number | undefined): Promise<void> => {
+    if (index == undefined) return;
     try {
       const sheetFetch = await fetch("/sheet?" + new URLSearchParams({
           id: id,
-          rev: rev.toString(),
+          index: index.toString(),
+          unique: showUnique.toString(),
         }), {
         method: 'GET',
         headers: {
@@ -64,8 +65,39 @@
       if (sheetFetch.status != 200) {
         throw Error("error fetching sheet");
       }
-      const { cells, context } = await sheetFetch.json();
-      props[index] = {
+      // TODO: duplicate code
+      const { cells, context, rev } = await sheetFetch.json();
+      props[view] = {
+        title: rev.toString() + ": " + context.name,
+        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
+        cells: cells,
+        key: rev.toString(),
+      };
+    }
+    catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchLeaderboardByIndex = async (view: number, name: string, index: number | undefined): Promise<void> => {
+    if (index == undefined) return;
+    try {
+      const boardFetch = await fetch("/leaderboard?" + new URLSearchParams({
+          name: name,
+          index: index.toString(),
+          unique: showUnique.toString(),
+        }), {
+        method: 'GET',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      });
+      if (boardFetch.status != 200) {
+        throw Error("error fetching board");
+      }
+      // TODO: duplicate code
+      const { cells, context, rev } = await boardFetch.json();
+      props[view] = {
         title: rev.toString() + ": " + context.name,
         subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
         cells: cells,
@@ -87,40 +119,18 @@
     index_is_updating = true;
     if (mode === "sheet") {
       await Promise.all([
-        updateSheet(0, menuGid, currentIndex),
-        updateSheet(1, menuGid, currentIndex+1)
+        fetchSheetByIndex(0, menuGid, currentIndex),
+        fetchSheetByIndex(1, menuGid, currentIndex+1),
       ]);
     }
     else if (mode === "leaderboard") {
-      const board = boards[menuBoard];
-      if (board !== undefined) {
-        const getVersion = (index: number): {
-          id: string,
-          rev: number,
-        } => {
-          let intLength = 0;
-          for (const sheet of board) {
-            const newIntLength = intLength + sheet.end - sheet.start + 1;
-            if (index < newIntLength) {
-              return {
-                id: sheet.gid,
-                rev: index - intLength + sheet.start,
-              };
-            }
-            intLength = newIntLength;
-          }
-          throw Error("invalid index");
-        };
-        const version1 = getVersion(currentIndex);
-        const version2 = getVersion(currentIndex+1);
-        await Promise.all([
-          updateSheet(0, version1.id, version1.rev),
-          updateSheet(1, version2.id, version2.rev)
-        ]);
-      }
-      else {
-        throw Error("invalid leaderboard name");
-      }
+      await Promise.all([
+        fetchLeaderboardByIndex(0, menuBoard, currentIndex),
+        fetchLeaderboardByIndex(1, menuBoard, currentIndex+1),
+      ]);
+    }
+    else {
+      throw Error("invalid leaderboard name");
     }
     index_is_updating = false;
     if (index_has_changed) {
@@ -131,38 +141,44 @@
   const updateInterval = async (): Promise<void> => {
     if (menuGid === undefined) return;
     if (mode === "sheet") {
-      const history = data.histories[menuGid];
-      if (history !== undefined) {
-        let min = Infinity;
-        let max = 0;
-        for (const interval of history) {
-          min = Math.min(min, interval.start);
-          max = Math.max(max, interval.end-1);
-        }
-        MIN_INDEX = min;
-        MAX_INDEX = max;
-        currentIndex = MIN_INDEX;
-        menuIndex = MIN_INDEX;
+      const sheetCountFetch = await fetch("/sheet/info?" + new URLSearchParams({
+          id: menuGid,
+          unique: showUnique.toString(),
+        }), {
+        method: 'GET',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      });
+      if (sheetCountFetch.status != 200) {
+        throw Error("error fetching sheet");
       }
-      else {
-        throw Error("invalid gid");
-      }
+      // TODO: duplicate code
+      const count = (await sheetCountFetch.json()).count;
+      MIN_INDEX = 0;
+      MAX_INDEX = count-2;
+      currentIndex = MIN_INDEX;
+      menuIndex = MIN_INDEX;
     }
     else if (mode === "leaderboard") {
-      const board = boards[menuBoard];
-      if (board !== undefined) {
-        let max = 0;
-        for (const sheet of board) {
-          max += sheet.end - sheet.start + 1;
-        }
-        MIN_INDEX = 0;
-        MAX_INDEX = max-2; // figured out by trial and error lmao
-        currentIndex = 0;
-        menuIndex = 0;
+      const sheetCountFetch = await fetch("/leaderboard/info?" + new URLSearchParams({
+          name: menuBoard,
+          unique: showUnique.toString(),
+        }), {
+        method: 'GET',
+        headers: {
+          'Content-type': 'application/json',
+        },
+      });
+      if (sheetCountFetch.status != 200) {
+        throw Error("error fetching sheet");
       }
-      else {
-        throw Error("invalid leaderboard name");
-      }
+      // TODO: duplicate code
+      const count = (await sheetCountFetch.json()).count;
+      MIN_INDEX = 0;
+      MAX_INDEX = count-2;
+      currentIndex = MIN_INDEX;
+      menuIndex = MIN_INDEX;
     }
     await updateProps();
   }
@@ -185,6 +201,7 @@
   $: menuGid, updateInterval();
   $: menuBoard, updateInterval();
   $: mode, updateInterval();
+  $: showUnique, updateInterval();
 </script>
 
 <div id=layout>

@@ -11,18 +11,9 @@ export const load: PageServerLoad = async () => {
   const allBoards = JSON.parse(
     (await fs.promises.readFile(`data/leaderboards.json`)).toString()
   );
-  const uniqueRevs: { [key: string]: Array<number> } = {};
-  for (const gid of gids) {
-      const unique = JSON.parse(
-        (await fs.promises.readFile(`data/revs/${gid}/unique_revs.json`))
-            .toString()
-      );
-      uniqueRevs[gid] = unique;
-  }
   return {
     gids: gids,
     histories: allHistories,
     boards: allBoards,
-    uniqueRevs: uniqueRevs,
   };
 }

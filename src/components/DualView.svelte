@@ -6,7 +6,9 @@
   import Sheet from "$components/Sheet.svelte";
   let scrollLeft = 0;
   let scrollTop = 0;
-  let setCellColor: Array<(i: number, j: number, color: RGBColor | undefined) => void> = [];
+  let setCellColor: Array<
+    (i: number, j: number, color: RGBColor | undefined) => void
+  > = [];
   let getRowHeight: Array<(i: number) => number> = [];
   let viewHeight: number;
   let mounted = false;
@@ -14,14 +16,12 @@
     title: "",
     subtitle: "",
     cells: [[]],
-    key: ""
   };
 
   export let rightProps: DualViewProps = {
     title: "",
     subtitle: "",
     cells: [[]],
-    key: ""
   };
 
   let leftCells: Array<Array<SheetCellProps>> = [[]];
@@ -30,15 +30,17 @@
   let selected: [number, number] | undefined = undefined;
 
   const getSheetCells = (props: DualViewProps) => {
-    return props.cells.map((row, i) => row.map((content, j) => {
-      return {
-        content: content,
-        row: i,
-        col: j,
-        color: "background-color:rgb(255, 255, 255)",
-      }
-    }));
-  }
+    return props.cells.map((row, i) =>
+      row.map((content, j) => {
+        return {
+          content: content,
+          row: i,
+          col: j,
+          color: "background-color:rgb(255, 255, 255)",
+        };
+      }),
+    );
+  };
 
   const setScroll = (e: Event) => {
     e.preventDefault();
@@ -97,10 +99,14 @@
       min2 = Math.min(min2, newIndex);
     }
     // scroll to show the earliest colored row
-    const newScrollTop = Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
+    const newScrollTop =
+      Math.min(getRowHeight[0](min1), getRowHeight[1](min2)) - 40;
     scrollTop = newScrollTop === Infinity ? 0 : Math.max(newScrollTop, 0);
   };
-  const updateSheetState = async (left: DualViewProps, right: DualViewProps) => {
+  const updateSheetState = async (
+    left: DualViewProps,
+    right: DualViewProps,
+  ) => {
     leftCells = getSheetCells(left);
     rightCells = getSheetCells(right);
     // wait for each view to show new table
@@ -115,44 +121,44 @@
   });
 </script>
 
-<div id=layout>
-  <div id=left-title>
+<div id="layout">
+  <div id="left-title">
     <h2>{leftProps.title}</h2>
     <p>{leftProps.subtitle}</p>
   </div>
 
-  <div id=right-title>
+  <div id="right-title">
     <h2>{rightProps.title}</h2>
     <p>{rightProps.subtitle}</p>
   </div>
 
   <SheetView
-    bind:scrollTop={scrollTop}
-    bind:scrollLeft={scrollLeft}
+    bind:scrollTop
+    bind:scrollLeft
     bind:height={viewHeight}
     on:scroll={setScroll}
   >
     <Sheet
       cells={leftCells}
-      scrollTop={scrollTop}
-      viewHeight={viewHeight}
-      bind:selected={selected}
+      {scrollTop}
+      {viewHeight}
+      bind:selected
       bind:setCellColor={setCellColor[0]}
       bind:getRowHeight={getRowHeight[0]}
     />
   </SheetView>
 
   <SheetView
-    bind:scrollTop={scrollTop}
-    bind:scrollLeft={scrollLeft}
+    bind:scrollTop
+    bind:scrollLeft
     bind:height={viewHeight}
     on:scroll={setScroll}
   >
     <Sheet
       cells={rightCells}
-      scrollTop={scrollTop}
-      viewHeight={viewHeight}
-      bind:selected={selected}
+      {scrollTop}
+      {viewHeight}
+      bind:selected
       bind:setCellColor={setCellColor[1]}
       bind:getRowHeight={getRowHeight[1]}
     />

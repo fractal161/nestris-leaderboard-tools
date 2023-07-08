@@ -10,8 +10,8 @@
     main.scrollLeft = scrollLeft;
   };
 
-  $: scrollTop, setScroll()
-  $: scrollLeft, setScroll()
+  $: scrollTop, setScroll();
+  $: scrollLeft, setScroll();
   onMount(() => {
     console.log("SheetView mounted");
     setScroll();
@@ -20,9 +20,9 @@
 
 <div class="parent" bind:this={main} bind:clientHeight={height} on:scroll>
   <div class="child">
-    <slot/>
+    <slot />
   </div>
-  <div class="scrollspace"></div>
+  <div class="scrollspace" />
 </div>
 
 <style>

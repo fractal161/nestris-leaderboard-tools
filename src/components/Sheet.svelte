@@ -27,12 +27,17 @@
     width: 0,
     height: 0,
   };
-  export const setCellColor = (i: number, j: number, color: RGBColor | undefined): void => {
+  export const setCellColor = (
+    i: number,
+    j: number,
+    color: RGBColor | undefined,
+  ): void => {
     if (color === undefined) {
       cells[i][j].color = "";
-    }
-    else {
-      cells[i][j].color = `background-color:rgb(${color.red},${color.green},${color.blue})`;
+    } else {
+      cells[i][
+        j
+      ].color = `background-color:rgb(${color.red},${color.green},${color.blue})`;
     }
   };
   let selectorStyle: string;
@@ -41,20 +46,22 @@
     if (cells[0][0].elem === undefined) return Infinity;
     const thHeight = cells[0][0].elem.getBoundingClientRect().height;
     const tdHeight = thHeight + 4;
-    return thHeight + tdHeight * (i-1);
+    return thHeight + tdHeight * (i - 1);
   };
   const updateSelectorStyle = (): void => {
     if (selected === undefined) return;
     const [i, j] = selected;
     let cellElem = cells[i][j].elem;
     if (cellElem === undefined) {
-      console.error(`Attempted to update location ${i}, ${j} in updateSelectorStyle`);
+      console.error(
+        `Attempted to update location ${i}, ${j} in updateSelectorStyle`,
+      );
       return;
     }
-    selector.top = cellElem.offsetTop-1;
-    selector.left = cellElem.offsetLeft-1;
-    selector.width = cellElem.offsetWidth-2;
-    selector.height = cellElem.offsetHeight-2;
+    selector.top = cellElem.offsetTop - 1;
+    selector.left = cellElem.offsetLeft - 1;
+    selector.width = cellElem.offsetWidth - 2;
+    selector.height = cellElem.offsetHeight - 2;
     selectorStyle = `left: ${selector.left}px;
       top: ${selector.top}px; width: ${selector.width}px;
       height: ${selector.height}px`;
@@ -62,14 +69,16 @@
   const updateSelector = (i: number, j: number): void => {
     if (selected !== undefined && selected[0] === i && selected[1] === j) {
       selected = undefined;
-    }
-    else {
+    } else {
       selected = [i, j];
       updateSelectorStyle();
     }
   };
   // only render the rows already seen
-  const refresh = async (cells: Array<Array<SheetCellProps>>, scrollTop: number) => {
+  const refresh = async (
+    cells: Array<Array<SheetCellProps>>,
+    scrollTop: number,
+  ) => {
     await tick();
     if (cells.length < 2) {
       visibleRows = cells.slice(1);
@@ -81,21 +90,27 @@
     // main idea: make each row the same height, so computations can be fixed
     // start by rendering the first row so actual height can be measured
     if (cells[0][0].elem === undefined) return;
-    const thHeight = cells[0][0].elem.getBoundingClientRect().height-1;
+    const thHeight = cells[0][0].elem.getBoundingClientRect().height - 1;
     const tdHeight = thHeight + 5;
-    const startIndex = Math.max(Math.floor((scrollTop - thHeight) / tdHeight) - 9, 1);
-    const endIndex = Math.min(Math.floor((scrollTop + viewHeight) / tdHeight) + 9, cells.length);
+    const startIndex = Math.max(
+      Math.floor((scrollTop - thHeight) / tdHeight) - 9,
+      1,
+    );
+    const endIndex = Math.min(
+      Math.floor((scrollTop + viewHeight) / tdHeight) + 9,
+      cells.length,
+    );
     // TODO: the +1 is a hack to make scrolling nice when a new row is added
     // to the bottom, maybe better to share a maxRowCount prop across both
-    [ topPad, bottomPad, visibleRows ] = [
-      tdHeight * (startIndex-1),
+    [topPad, bottomPad, visibleRows] = [
+      tdHeight * (startIndex - 1),
       tdHeight * (cells.length - endIndex + 1),
-      cells.slice(startIndex, endIndex)
+      cells.slice(startIndex, endIndex),
     ];
     await tick();
   };
   $: selected, updateSelectorStyle();
-  $: if(mounted) refresh(cells, scrollTop);
+  $: if (mounted) refresh(cells, scrollTop);
   onMount(() => {
     mounted = true;
     console.log("Sheet mounted");
@@ -106,44 +121,44 @@
   <div
     class={selected === undefined ? "hidden" : "selector"}
     style={selectorStyle}
-  >
-  </div>
-  <div style={`border: none;
+  />
+  <div
+    style={`border: none;
                padding-top: ${topPad}px;
-               padding-bottom: ${bottomPad+10}px`
-  }>
-  <table>
-    <thead>
-      <tr>
-        {#each cells[0] as cell}
-          <th
-            role=cell
-            tabindex=-1
-            bind:this={cell.elem}
-            on:click={() => updateSelector(0, cell.col)}
-            style={cell.color}
-          >
-            {cell.content}
-          </th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody>
-      {#each visibleRows as row}
+               padding-bottom: ${bottomPad + 10}px`}
+  >
+    <table>
+      <thead>
         <tr>
-          {#each row as cell}
-            <td
+          {#each cells[0] as cell}
+            <th
+              role="cell"
+              tabindex="-1"
               bind:this={cell.elem}
-              on:click={() => updateSelector(cell.row, cell.col)}
+              on:click={() => updateSelector(0, cell.col)}
               style={cell.color}
             >
               {cell.content}
-            </td>
+            </th>
           {/each}
         </tr>
-      {/each}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {#each visibleRows as row}
+          <tr>
+            {#each row as cell}
+              <td
+                bind:this={cell.elem}
+                on:click={() => updateSelector(cell.row, cell.col)}
+                style={cell.color}
+              >
+                {cell.content}
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -152,7 +167,8 @@
     border-collapse: collapse;
     font-size: 10px;
   }
-  td, th {
+  td,
+  th {
     box-sizing: border-box;
     border: 1px solid gray;
     white-space: nowrap;

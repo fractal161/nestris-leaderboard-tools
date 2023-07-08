@@ -3,20 +3,23 @@ import type { RequestEvent } from "@sveltejs/kit";
 import { error, json } from "@sveltejs/kit";
 import assert from "node:assert";
 
-const leaderboards = JSON.parse(fs.readFileSync('data/leaderboards.json').toString());
+const leaderboards = JSON.parse(
+  fs.readFileSync("data/leaderboards.json").toString(),
+);
 
-export async function GET( req: RequestEvent ): Promise<Response> {
+export async function GET(req: RequestEvent): Promise<Response> {
   try {
     // TODO: better error handling
-    const name = req.url.searchParams.get("name") ?? assert.fail("no name provided");
+    const name =
+      req.url.searchParams.get("name") ?? assert.fail("no name provided");
     const unique = req.url.searchParams.get("unique") === "true";
     if (unique) {
       return json({
-        count: await getUniqueCount(name)
+        count: await getUniqueCount(name),
       });
     }
     return json({
-      count: await getTotalCount(name)
+      count: await getTotalCount(name),
     });
   } catch (err) {
     console.error(err);
@@ -42,12 +45,16 @@ async function getUniqueCount(name: string): Promise<number> {
   let count = 0;
   for (const sheet of leaderboard) {
     // for safety, check if file exists
-    assert(fs.existsSync(`data/revs/${sheet.gid}/unique_revs.json`), "sheet not present");
+    assert(
+      fs.existsSync(`data/revs/${sheet.gid}/unique_revs.json`),
+      "sheet not present",
+    );
     // find smallest index that's at least sheet.start and greatest index
     // that's at most sheet.end
     const uniqueRevs = JSON.parse(
-      (await fs.promises.readFile(`data/revs/${sheet.gid}/unique_revs.json`))
-        .toString()
+      (
+        await fs.promises.readFile(`data/revs/${sheet.gid}/unique_revs.json`)
+      ).toString(),
     );
     let start = 0;
     while (start < uniqueRevs.length && uniqueRevs[start] < sheet.start) {
@@ -61,4 +68,3 @@ async function getUniqueCount(name: string): Promise<number> {
   }
   return count;
 }
-

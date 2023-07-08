@@ -13,10 +13,10 @@
   let sheetIds: Array<string> = [];
   let boards: {
     [key: string]: Array<{
-      gid: string,
-      start: number,
-      end: number,
-    }>
+      gid: string;
+      start: number;
+      end: number;
+    }>;
   } = {};
   let menuBoard = "";
   let mode = "leaderboard";
@@ -27,14 +27,12 @@
     {
       title: "",
       subtitle: "",
-      cells: [ [ ] ],
-      key: "",
+      cells: [[]],
     },
     {
       title: "",
       subtitle: "",
-      cells: [ [ ] ],
-      key: "",
+      cells: [[]],
     },
   ];
 
@@ -49,19 +47,27 @@
     return `${mm}/${d}/${y} ${h}:${m}:${s} UTC`;
   };
 
-  const fetchSheetByIndex = async (view: number, id: string, index: number | undefined): Promise<void> => {
+  const fetchSheetByIndex = async (
+    view: number,
+    id: string,
+    index: number | undefined,
+  ): Promise<void> => {
     if (index == undefined) return;
     try {
-      const sheetFetch = await fetch("/sheet?" + new URLSearchParams({
-          id: id,
-          index: index.toString(),
-          unique: showUnique.toString(),
-        }), {
-        method: 'GET',
-        headers: {
-          'Content-type': 'application/json',
+      const sheetFetch = await fetch(
+        "/sheet?" +
+          new URLSearchParams({
+            id: id,
+            index: index.toString(),
+            unique: showUnique.toString(),
+          }),
+        {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+          },
         },
-      });
+      );
       if (sheetFetch.status != 200) {
         throw Error("error fetching sheet");
       }
@@ -69,29 +75,37 @@
       const { cells, context, rev } = await sheetFetch.json();
       props[view] = {
         title: rev.toString() + ": " + context.name,
-        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
+        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${
+          context.editors ?? "unknown editor"
+        }`,
         cells: cells,
-        key: rev.toString(),
       };
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err);
     }
   };
 
-  const fetchLeaderboardByIndex = async (view: number, name: string, index: number | undefined): Promise<void> => {
+  const fetchLeaderboardByIndex = async (
+    view: number,
+    name: string,
+    index: number | undefined,
+  ): Promise<void> => {
     if (index == undefined) return;
     try {
-      const boardFetch = await fetch("/leaderboard?" + new URLSearchParams({
-          name: name,
-          index: index.toString(),
-          unique: showUnique.toString(),
-        }), {
-        method: 'GET',
-        headers: {
-          'Content-type': 'application/json',
+      const boardFetch = await fetch(
+        "/leaderboard?" +
+          new URLSearchParams({
+            name: name,
+            index: index.toString(),
+            unique: showUnique.toString(),
+          }),
+        {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+          },
         },
-      });
+      );
       if (boardFetch.status != 200) {
         throw Error("error fetching board");
       }
@@ -99,12 +113,12 @@
       const { cells, context, rev } = await boardFetch.json();
       props[view] = {
         title: rev.toString() + ": " + context.name,
-        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${context.editors ?? "unknown editor"}`,
+        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${
+          context.editors ?? "unknown editor"
+        }`,
         cells: cells,
-        key: rev.toString(),
       };
-    }
-    catch (err) {
+    } catch (err) {
       console.error(err);
     }
   };
@@ -120,16 +134,14 @@
     if (mode === "sheet") {
       await Promise.all([
         fetchSheetByIndex(0, menuGid, currentIndex),
-        fetchSheetByIndex(1, menuGid, currentIndex+1),
+        fetchSheetByIndex(1, menuGid, currentIndex + 1),
       ]);
-    }
-    else if (mode === "leaderboard") {
+    } else if (mode === "leaderboard") {
       await Promise.all([
         fetchLeaderboardByIndex(0, menuBoard, currentIndex),
-        fetchLeaderboardByIndex(1, menuBoard, currentIndex+1),
+        fetchLeaderboardByIndex(1, menuBoard, currentIndex + 1),
       ]);
-    }
-    else {
+    } else {
       throw Error("invalid leaderboard name");
     }
     index_is_updating = false;
@@ -146,52 +158,59 @@
   ): Promise<void> => {
     if (menuGid === undefined) return;
     if (mode === "sheet") {
-      const sheetCountFetch = await fetch("/sheet/info?" + new URLSearchParams({
-          id: menuGid,
-          unique: showUnique.toString(),
-        }), {
-        method: 'GET',
-        headers: {
-          'Content-type': 'application/json',
+      const sheetCountFetch = await fetch(
+        "/sheet/info?" +
+          new URLSearchParams({
+            id: menuGid,
+            unique: showUnique.toString(),
+          }),
+        {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+          },
         },
-      });
+      );
       if (sheetCountFetch.status != 200) {
         throw Error("error fetching sheet");
       }
       // TODO: duplicate code
       const count = (await sheetCountFetch.json()).count;
       MIN_INDEX = 0;
-      MAX_INDEX = count-2;
+      MAX_INDEX = count - 2;
       currentIndex = MIN_INDEX;
       menuIndex = MIN_INDEX;
-    }
-    else if (mode === "leaderboard") {
-      const sheetCountFetch = await fetch("/leaderboard/info?" + new URLSearchParams({
-          name: menuBoard,
-          unique: showUnique.toString(),
-        }), {
-        method: 'GET',
-        headers: {
-          'Content-type': 'application/json',
+    } else if (mode === "leaderboard") {
+      const sheetCountFetch = await fetch(
+        "/leaderboard/info?" +
+          new URLSearchParams({
+            name: menuBoard,
+            unique: showUnique.toString(),
+          }),
+        {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+          },
         },
-      });
+      );
       if (sheetCountFetch.status != 200) {
         throw Error("error fetching sheet");
       }
       // TODO: duplicate code
       const count = (await sheetCountFetch.json()).count;
       MIN_INDEX = 0;
-      MAX_INDEX = count-2;
+      MAX_INDEX = count - 2;
       currentIndex = MIN_INDEX;
       menuIndex = MIN_INDEX;
     }
     await updateProps();
-  }
+  };
   const updateIndexFromMenu = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       currentIndex = menuIndex;
     }
-  }
+  };
   onMount(async () => {
     currentIndex = MIN_INDEX;
     menuIndex = MIN_INDEX;
@@ -202,44 +221,46 @@
     await updateProps();
   });
   $: currentIndex, updateProps();
-  $: currentIndex, menuIndex = currentIndex;
+  $: currentIndex, (menuIndex = currentIndex);
   $: updateInterval(menuGid, menuBoard, mode, showUnique);
 </script>
 
-<div id=layout>
-
-  <div id=view>
-    <DualView
-      leftProps={props[0]}
-      rightProps={props[1]}
-    />
+<div id="layout">
+  <div id="view">
+    <DualView leftProps={props[0]} rightProps={props[1]} />
   </div>
 
-  <div id=scrollbar>
-    <p class=scrollbar-text>Index:</p>
+  <div id="scrollbar">
+    <p class="scrollbar-text">Index:</p>
     <input
-      type=number
-      min={ MIN_INDEX }
-      max={ MAX_INDEX }
+      type="number"
+      min={MIN_INDEX}
+      max={MAX_INDEX}
       bind:value={menuIndex}
       on:keypress={updateIndexFromMenu}
+    />
+    <button
+      class="scroll-button"
+      on:click={() => {
+        currentIndex = Math.max(MIN_INDEX, currentIndex - 1);
+      }}>-</button
     >
-    <button class=scroll-button on:click={() => {
-      currentIndex = Math.max(MIN_INDEX, currentIndex-1)
-    }}>-</button>
     <input
-      type=range
-      min={ MIN_INDEX }
-      max= { MAX_INDEX }
+      type="range"
+      min={MIN_INDEX}
+      max={MAX_INDEX}
       bind:value={currentIndex}
+    />
+    <button
+      class="scroll-button"
+      on:click={() => {
+        currentIndex = Math.min(MAX_INDEX, currentIndex + 1);
+      }}>+</button
     >
-    <button class=scroll-button on:click={() => {
-      currentIndex = Math.min(MAX_INDEX, currentIndex+1)
-    }}>+</button>
   </div>
 
-  <div id=sidebar>
-    <p class=sidebar-text>Mode:</p>
+  <div id="sidebar">
+    <p class="sidebar-text">Mode:</p>
     <select bind:value={mode}>
       <option value="leaderboard">leaderboard</option>
       <option value="sheet">sheet</option>
@@ -248,24 +269,24 @@
     {#if mode === "sheet"}
       <p>Sheet ID:</p>
       <select bind:value={menuGid}>
-      {#each sheetIds as id}
-        <option value={id}>
-          {id}
-        </option>
-      {/each}
+        {#each sheetIds as id}
+          <option value={id}>
+            {id}
+          </option>
+        {/each}
       </select>
     {:else if mode === "leaderboard"}
       <p>Leaderboard:</p>
       <select bind:value={menuBoard}>
-      {#each Object.keys(boards) as id}
-        <option value={id}>
-          {id}
-        </option>
-      {/each}
+        {#each Object.keys(boards) as id}
+          <option value={id}>
+            {id}
+          </option>
+        {/each}
       </select>
     {/if}
     <p>Hide identical revisions:</p>
-    <input type="checkbox" bind:checked={showUnique}>
+    <input type="checkbox" bind:checked={showUnique} />
   </div>
 </div>
 
@@ -285,11 +306,11 @@
   div {
     border: 1px solid gray;
   }
-  input[type=range] {
+  input[type="range"] {
     border: none;
     width: 100%;
   }
-  input[type=number] {
+  input[type="number"] {
     width: 75px;
   }
   #scrollbar {

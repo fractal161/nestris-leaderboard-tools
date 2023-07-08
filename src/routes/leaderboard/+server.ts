@@ -4,13 +4,17 @@ import { error, json } from "@sveltejs/kit";
 import assert from "node:assert";
 import { getSheetRev } from "$lib/sheet";
 
-const leaderboards = JSON.parse(fs.readFileSync('data/leaderboards.json').toString());
+const leaderboards = JSON.parse(
+  fs.readFileSync("data/leaderboards.json").toString(),
+);
 
-export async function GET( req: RequestEvent ): Promise<Response> {
+export async function GET(req: RequestEvent): Promise<Response> {
   try {
     // TODO: better error handling
-    const name = req.url.searchParams.get("name") ?? assert.fail("name is null");
-    const index = req.url.searchParams.get("index") ?? assert.fail("index is null");
+    const name =
+      req.url.searchParams.get("name") ?? assert.fail("name is null");
+    const index =
+      req.url.searchParams.get("index") ?? assert.fail("index is null");
     const unique = req.url.searchParams.get("unique") === "true";
     let indexNum = parseInt(index);
     const leaderboard = leaderboards[name];
@@ -21,8 +25,11 @@ export async function GET( req: RequestEvent ): Promise<Response> {
       for (const sheet of leaderboard) {
         // loop through unique_revs to find rev number and id
         const uniqueRevs = JSON.parse(
-          (await fs.promises.readFile(`data/revs/${sheet.gid}/unique_revs.json`))
-            .toString()
+          (
+            await fs.promises.readFile(
+              `data/revs/${sheet.gid}/unique_revs.json`,
+            )
+          ).toString(),
         );
         let start = 0;
         while (start < uniqueRevs.length && uniqueRevs[start] < sheet.start) {
@@ -59,4 +66,3 @@ export async function GET( req: RequestEvent ): Promise<Response> {
     throw error(404, "bad");
   }
 }
-

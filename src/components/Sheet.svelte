@@ -7,7 +7,7 @@
 
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import type { SheetCellProps, RGBColor } from "../types/client";
+  import type { SheetCellProps, RGBColor } from "$types/client";
   export let cells: Array<Array<SheetCellProps>>;
   export let selected: [number, number] | undefined = undefined;
   let topPad = 0;

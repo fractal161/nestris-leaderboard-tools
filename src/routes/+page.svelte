@@ -1,6 +1,6 @@
 <script lang="ts">
-  import DualView from "./DualView.svelte";
-  import type { DualViewProps } from "../types/client";
+  import DualView from "$components/DualView.svelte";
+  import type { DualViewProps } from "$types/client";
   import type { PageServerData } from "./$types";
   import { onMount } from "svelte";
   export let data: PageServerData;

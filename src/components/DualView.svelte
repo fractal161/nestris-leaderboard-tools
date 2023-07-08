@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import type { RGBColor, DualViewProps, SheetCellProps } from "../types/client";
-  import { diffSheets } from "../lib/diff";
-  import SheetView from "./SheetView.svelte";
-  import Sheet from "./Sheet.svelte";
+  import type { RGBColor, DualViewProps, SheetCellProps } from "$types/client";
+  import { diffSheets } from "$lib/diff";
+  import SheetView from "$components/SheetView.svelte";
+  import Sheet from "$components/Sheet.svelte";
   let scrollLeft = 0;
   let scrollTop = 0;
   let setCellColor: Array<(i: number, j: number, color: RGBColor | undefined) => void> = [];

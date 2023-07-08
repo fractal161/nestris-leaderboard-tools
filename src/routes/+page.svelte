@@ -20,6 +20,7 @@
   } = {};
   let menuBoard = "";
   let mode = "leaderboard";
+  let view = "sheet";
   let menuIndex: number;
   let showUnique = true;
 
@@ -142,7 +143,7 @@
         fetchLeaderboardByIndex(1, menuBoard, currentIndex + 1),
       ]);
     } else {
-      throw Error("invalid leaderboard name");
+      throw Error("invalid mode");
     }
     index_is_updating = false;
     if (index_has_changed) {
@@ -227,7 +228,11 @@
 
 <div id="layout">
   <div id="view">
-    <DualView leftProps={props[0]} rightProps={props[1]} />
+    {#if mode === "leaderboard" && view === "player"}
+      player stuff goes here
+    {:else}
+      <DualView leftProps={props[0]} rightProps={props[1]} />
+    {/if}
   </div>
 
   <div id="scrollbar">
@@ -283,6 +288,12 @@
             {id}
           </option>
         {/each}
+      </select>
+
+      <p>View:</p>
+      <select bind:value={view}>
+        <option value="sheet">sheet</option>
+        <option value="player">player</option>
       </select>
     {/if}
     <p>Hide identical revisions:</p>

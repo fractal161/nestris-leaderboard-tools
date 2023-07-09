@@ -39,6 +39,9 @@
     },
   ];
 
+  // for keeping playerview consistent
+  let selectedPlayer: string | undefined = undefined;
+
   const formatTime = (time: number): string => {
     const date = new Date(time);
     const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
@@ -232,7 +235,7 @@
 <div id="layout">
   <div id="view">
     {#if mode === "leaderboard" && view === "player"}
-      <PlayerView leaderboard={menuBoard} />
+      <PlayerView leaderboard={menuBoard} bind:selectedPlayer />
     {:else}
       <DualView leftProps={dualViewProps[0]} rightProps={dualViewProps[1]} />
     {/if}

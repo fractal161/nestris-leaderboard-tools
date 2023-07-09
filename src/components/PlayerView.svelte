@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
   export let leaderboard: string;
-  let selectedPlayer: string | undefined = undefined;
+  export let selectedPlayer: string | undefined = undefined;
+  // any future state that should be saved upon context switch should be
+  // exported as a prop here, so the root page can bind to it.
   let playerList: Array<string> = [];
   let scoreList: Array<Array<string>> = [[]];
   let mounted = false;
@@ -51,6 +53,7 @@
   onMount(async () => {
     mounted = true;
     await fetchPlayerList(leaderboard);
+    await fetchPlayerScores(selectedPlayer);
   });
   $: fetchPlayerList(leaderboard);
   $: fetchPlayerScores(selectedPlayer);
@@ -71,6 +74,7 @@
         <label class="player-option" for={player}>{player} </label>
       {/each}
     </div>
+    <button type="button">Confirm</button>
   </div>
   <div class="scores">
     <h3>

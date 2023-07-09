@@ -26,7 +26,7 @@
   let menuIndex: number;
   let showUnique = true;
 
-  let props: Array<DualViewProps> = [
+  let dualViewProps: Array<DualViewProps> = [
     {
       title: "",
       subtitle: "",
@@ -76,7 +76,7 @@
       }
       // TODO: duplicate code
       const { cells, context, rev } = await sheetFetch.json();
-      props[view] = {
+      dualViewProps[view] = {
         title: rev.toString() + ": " + context.name,
         subtitle: `${formatTime(context.time) ?? "unknown time"} by ${
           context.editors ?? "unknown editor"
@@ -114,7 +114,7 @@
       }
       // TODO: duplicate code
       const { cells, context, rev } = await boardFetch.json();
-      props[view] = {
+      dualViewProps[view] = {
         title: rev.toString() + ": " + context.name,
         subtitle: `${formatTime(context.time) ?? "unknown time"} by ${
           context.editors ?? "unknown editor"
@@ -184,6 +184,7 @@
       currentIndex = MIN_INDEX;
       menuIndex = MIN_INDEX;
     } else if (mode === "leaderboard") {
+      // fetch information for sheet view
       const sheetCountFetch = await fetch(
         "/leaderboard/info?" +
           new URLSearchParams({
@@ -231,40 +232,42 @@
 <div id="layout">
   <div id="view">
     {#if mode === "leaderboard" && view === "player"}
-      <PlayerView />
+      <PlayerView leaderboard={menuBoard} />
     {:else}
-      <DualView leftProps={props[0]} rightProps={props[1]} />
+      <DualView leftProps={dualViewProps[0]} rightProps={dualViewProps[1]} />
     {/if}
   </div>
 
-  <div id="scrollbar">
-    <p class="scrollbar-text">Index:</p>
-    <input
-      type="number"
-      min={MIN_INDEX}
-      max={MAX_INDEX}
-      bind:value={menuIndex}
-      on:keypress={updateIndexFromMenu}
-    />
-    <button
-      class="scroll-button"
-      on:click={() => {
-        currentIndex = Math.max(MIN_INDEX, currentIndex - 1);
-      }}>-</button
-    >
-    <input
-      type="range"
-      min={MIN_INDEX}
-      max={MAX_INDEX}
-      bind:value={currentIndex}
-    />
-    <button
-      class="scroll-button"
-      on:click={() => {
-        currentIndex = Math.min(MAX_INDEX, currentIndex + 1);
-      }}>+</button
-    >
-  </div>
+  {#if !(mode === "leaderboard" && view === "player")}
+    <div id="scrollbar">
+      <p class="scrollbar-text">Index:</p>
+      <input
+        type="number"
+        min={MIN_INDEX}
+        max={MAX_INDEX}
+        bind:value={menuIndex}
+        on:keypress={updateIndexFromMenu}
+      />
+      <button
+        class="scroll-button"
+        on:click={() => {
+          currentIndex = Math.max(MIN_INDEX, currentIndex - 1);
+        }}>-</button
+      >
+      <input
+        type="range"
+        min={MIN_INDEX}
+        max={MAX_INDEX}
+        bind:value={currentIndex}
+      />
+      <button
+        class="scroll-button"
+        on:click={() => {
+          currentIndex = Math.min(MAX_INDEX, currentIndex + 1);
+        }}>+</button
+      >
+    </div>
+  {/if}
 
   <div id="sidebar">
     <p class="sidebar-text">Mode:</p>

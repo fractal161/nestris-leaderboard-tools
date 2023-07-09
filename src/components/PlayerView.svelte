@@ -1,7 +1,59 @@
 <script lang="ts">
-  export let playerList = ["player1", "player2"];
-  export let scoreList = ["score1", "score2"];
-  export let selectedPlayer: string | undefined = undefined;
+  import { onMount } from "svelte";
+  export let leaderboard: string;
+  let selectedPlayer: string | undefined = undefined;
+  let playerList: Array<string> = [];
+  let scoreList: Array<Array<string>> = [[]];
+  let mounted = false;
+  const fetchPlayerScores = async (
+    selectedPlayer: string | undefined,
+  ): Promise<void> => {
+    if (!mounted) return;
+    if (selectedPlayer === undefined) return;
+    const scoreFetch = await fetch(
+      "/player?" +
+        new URLSearchParams({
+          player: selectedPlayer,
+          board: leaderboard,
+        }),
+      {
+        method: "GET",
+        headers: {
+          "Content-type": "application/json",
+        },
+      },
+    );
+    if (scoreFetch.status !== 200) {
+      throw Error("error fetching player scores");
+    }
+    scoreList = await scoreFetch.json();
+  };
+  const fetchPlayerList = async (leaderboard: string): Promise<void> => {
+    if (!mounted) return;
+    // fetch list of players
+    const playerListFetch = await fetch(
+      "/player/all?" +
+        new URLSearchParams({
+          board: leaderboard,
+        }),
+      {
+        method: "GET",
+        headers: {
+          "Content-type": "application/json",
+        },
+      },
+    );
+    if (playerListFetch.status !== 200) {
+      throw Error("error fetching player list");
+    }
+    playerList = await playerListFetch.json();
+  };
+  onMount(async () => {
+    mounted = true;
+    await fetchPlayerList(leaderboard);
+  });
+  $: fetchPlayerList(leaderboard);
+  $: fetchPlayerScores(selectedPlayer);
 </script>
 
 <div class="main">
@@ -21,7 +73,9 @@
     </div>
   </div>
   <div class="scores">
-    <h3>Scores for {selectedPlayer || "unselected"}</h3>
+    <h3>
+      {leaderboard}{selectedPlayer === undefined ? "" : ": " + selectedPlayer}
+    </h3>
     <div class="scroll-container">
       <ul>
         {#each scoreList as score}

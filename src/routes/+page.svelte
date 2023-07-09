@@ -1,5 +1,6 @@
 <script lang="ts">
   import DualView from "$components/DualView.svelte";
+  import PlayerView from "$components/PlayerView.svelte";
   import type { DualViewProps } from "$types/client";
   import type { PageServerData } from "./$types";
   import { onMount } from "svelte";
@@ -19,8 +20,9 @@
     }>;
   } = {};
   let menuBoard = "";
+  // TODO: change to default
   let mode = "leaderboard";
-  let view = "sheet";
+  let view = "player";
   let menuIndex: number;
   let showUnique = true;
 
@@ -229,7 +231,7 @@
 <div id="layout">
   <div id="view">
     {#if mode === "leaderboard" && view === "player"}
-      player stuff goes here
+      <PlayerView />
     {:else}
       <DualView leftProps={props[0]} rightProps={props[1]} />
     {/if}
@@ -312,7 +314,8 @@
     grid-template-areas:
       "view side"
       "slider side";
-    font-family: monospace;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 12px;
   }
   div {
     border: 1px solid gray;

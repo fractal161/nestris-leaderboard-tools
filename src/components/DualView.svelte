@@ -176,7 +176,7 @@
     grid-template-areas:
       "left-title right-title"
       "left right";
-    font-family: monospace;
+    font-family: "Ubuntu Mono", monospace;
   }
   div {
     border: 1px solid gray;

@@ -13,7 +13,7 @@ import tqdm
 from urllib.parse import unquote
 import cProfile
 
-def get_spreadsheet_history():
+def compute_spreadsheet_history():
     sheet_history = dict()
 
     for i in range(1, 39067):
@@ -134,7 +134,7 @@ def hash_file(filename):
     # return the hex representation of digest
     return h.hexdigest()
 
-def get_unique_csv_revs(gid):
+def compute_unique_csv_revs(gid):
     with open('data/sheet_history.json', 'r') as infile:
         history = json.load(infile)
         if gid not in history:
@@ -209,8 +209,6 @@ def merge_timestamp_chunks():
     with open('data/timestamps.json', 'w') as f:
         json.dump(timestamps, f, indent=2)
 
-#cProfile.run('get_csv()', 'app.profile')
-#get_all_csvs()
 if __name__ == '__main__':
     argc = len(sys.argv)
     if argc > 0:

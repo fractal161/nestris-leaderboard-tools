@@ -19,7 +19,7 @@ export async function GET(req: RequestEvent): Promise<Response> {
       // just return the index in unique_revs.json
       const unique_revs = JSON.parse(
         (
-          await fs.promises.readFile(`data/revs/${id}/unique_revs.json`)
+          await fs.promises.readFile(`findings/sheets/${id}/unique_revs.json`)
         ).toString(),
       );
       const rev = unique_revs[index];

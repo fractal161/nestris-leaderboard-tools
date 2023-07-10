@@ -44,7 +44,7 @@ async function getTotalCount(id: string): Promise<number> {
 
 async function getUniqueCount(id: string): Promise<number> {
   const unique_revs = JSON.parse(
-    (await fs.promises.readFile(`data/revs/${id}/unique_revs.json`)).toString(),
+    (await fs.promises.readFile(`findings/sheets/${id}/unique_revs.json`)).toString(),
   );
   return unique_revs.length;
 }

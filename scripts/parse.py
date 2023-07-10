@@ -152,7 +152,7 @@ def compute_unique_csv_revs(gid):
                 unique_revs.append(i)
             filehash = newhash
         print(len(unique_revs), 'distinct revisions')
-        with open(f'data/revs/{gid}/unique_revs.json', 'w') as outfile:
+        with open(f'findings/sheets/{gid}/unique_revs.json', 'w') as outfile:
             json.dump(unique_revs, outfile)
 
     # open sheet_history to get start/end revisions

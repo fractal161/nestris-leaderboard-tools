@@ -18,13 +18,13 @@ def get_rev_csv(id: str, rev: int) -> list[list[str]]:
         return list(sheet)
 
 def get_unique_revs(id: str) -> list[int]:
-    with open(f'data/revs/{id}/unique_revs.json', 'r') as f:
+    with open(f'findings/sheets/{id}/unique_revs.json', 'r') as f:
         return json.load(f)
 
 def get_dirty_revs(id: str) -> list[int]:
-    if not os.path.exists(f'data/revs/{id}/dirty_revs.json'):
+    if not os.path.exists(f'findings/sheets/{id}/dirty_revs.json'):
         return []
-    with open(f'data/revs/{id}/dirty_revs.json', 'r') as f:
+    with open(f'findings/sheets/{id}/dirty_revs.json', 'r') as f:
         revs = []
         intervals = json.load(f)
         for interval in intervals:

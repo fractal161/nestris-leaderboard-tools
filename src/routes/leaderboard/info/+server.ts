@@ -46,14 +46,14 @@ async function getUniqueCount(name: string): Promise<number> {
   for (const sheet of leaderboard) {
     // for safety, check if file exists
     assert(
-      fs.existsSync(`data/revs/${sheet.gid}/unique_revs.json`),
+      fs.existsSync(`findings/sheets/${sheet.gid}/unique_revs.json`),
       "sheet not present",
     );
     // find smallest index that's at least sheet.start and greatest index
     // that's at most sheet.end
     const uniqueRevs = JSON.parse(
       (
-        await fs.promises.readFile(`data/revs/${sheet.gid}/unique_revs.json`)
+        await fs.promises.readFile(`findings/sheets/${sheet.gid}/unique_revs.json`)
       ).toString(),
     );
     let start = 0;

@@ -27,7 +27,7 @@ export async function GET(req: RequestEvent): Promise<Response> {
         const uniqueRevs = JSON.parse(
           (
             await fs.promises.readFile(
-              `data/revs/${sheet.gid}/unique_revs.json`,
+              `findings/sheets/${sheet.gid}/unique_revs.json`,
             )
           ).toString(),
         );

@@ -1,4 +1,5 @@
 from data import *
+from diff import diffSheets
 
 '''
 Purpose of this is to do the basic conversion of csv to player pb progression.
@@ -31,4 +32,16 @@ def get_distinct_sheet_headers(name):
             i += 1
 
 if __name__ == '__main__':
-    get_distinct_sheet_headers('NTSC 0-19 Score')
+    id = "1516944123"
+    revs = get_clean_revs(id)
+    special = get_clean_unusual_revs(id)
+    i = 0
+    for rev1, rev2 in zip(revs[:-1], revs[1:]):
+        if rev1 in special and rev2 in special:
+            continue
+        sheet1 = get_rev_csv(id, rev1)
+        sheet2 = get_rev_csv(id, rev2)
+        diff = diffSheets(sheet1, sheet2)
+        if len(diff['added']) > 1 or len(diff['removed']) > 1:
+            print(f'{i}:', rev1, rev2)
+            i += 1

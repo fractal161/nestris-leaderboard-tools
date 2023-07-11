@@ -22,16 +22,39 @@ def get_unique_revs(id: str) -> list[int]:
         return json.load(f)
 
 def get_dirty_revs(id: str) -> list[int]:
-    if not os.path.exists(f'findings/sheets/{id}/dirty_revs.json'):
+    if not os.path.exists(f'findings/sheets/{id}/unusual_revs.json'):
         return []
-    with open(f'findings/sheets/{id}/dirty_revs.json', 'r') as f:
+    with open(f'findings/sheets/{id}/unusual_revs.json', 'r') as f:
         revs = []
         intervals = json.load(f)
         for interval in intervals:
             start, end = interval['start'], interval['end']
-            for i in range(start, end+1):
-                revs.append(i)
+            if interval['dirty']:
+                for i in range(start, end+1):
+                    revs.append(i)
         return revs
+
+def get_clean_unusual_revs(id: str) -> list[int]:
+    if not os.path.exists(f'findings/sheets/{id}/unusual_revs.json'):
+        return []
+    with open(f'findings/sheets/{id}/unusual_revs.json', 'r') as f:
+        revs = []
+        intervals = json.load(f)
+        for interval in intervals:
+            start, end = interval['start'], interval['end']
+            if not interval['dirty']:
+                for i in range(start, end+1):
+                    revs.append(i)
+        return revs
+
+def get_clean_revs(id: str) -> list[int]:
+    unique_revs = get_unique_revs(id)
+    dirty_revs = get_dirty_revs(id)
+    clean = []
+    for rev in unique_revs:
+        if rev not in dirty_revs:
+            clean.append(rev)
+    return clean
 
 def get_sheet_history() -> SheetHistory:
     with open('data/sheet_history.json', 'r') as f:

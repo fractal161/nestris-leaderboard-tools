@@ -1,6 +1,7 @@
 import json
 import csv
 import os
+import pandas as pd
 
 from datatypes import *
 
@@ -12,10 +13,24 @@ def get_raw_sheet(id: str, rev: int) -> bytes:
     with open(f'data/raws/{id}/{rev}.html.gz', 'rb') as f:
         return f.read()
 
-def get_rev_csv(id: str, rev: int) -> list[list[str]]:
+def get_rev_as_list(id: str, rev: int) -> list[list[str]]:
     with open(f'data/revs/{id}/{rev}.csv', 'r') as f:
         sheet = csv.reader(f)
         return list(sheet)
+
+def get_rev_as_df(id: str, rev: int) -> pd.DataFrame:
+    with open(f'findings/sheets/{id}/headers.json', 'r') as f:
+        all_headers = json.load(f)
+        headers = []
+        for header_range in all_headers:
+            if header_range['start'] <= rev and rev <= header_range['end']:
+                headers = header_range['headers']
+                break
+        if len(headers) == 0:
+            raise ValueError('BAD REVISION')
+        df = pd.read_csv(f'data/revs/{id}/{rev}.csv')
+        df.columns.values[:len(headers)] = headers
+        return df
 
 def get_unique_revs(id: str) -> list[int]:
     with open(f'findings/sheets/{id}/unique_revs.json', 'r') as f:

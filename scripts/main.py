@@ -115,15 +115,17 @@ def print_distinct_names(id):
                 players.add(player)
     print(len(players), 'total names')
 
+# the Most Important Function
+def get_all_player_histories(id: int):
+    overrides = get_diff_overrides('1516944123')
+
 if __name__ == '__main__':
     # print_distinct_sheet_headers("NTSC 0-19 Score")
     # df = get_rev_as_df("1078039113", 3799)
-    #print_unusual_revs("1516944123", hide_explained=False)
-    #print_unusual_revs("1078039113", hide_explained=False)
-    sheet1 = get_rev_as_list('1078039113', 31271)
-    sheet2 = get_rev_as_list('1078039113', 31273)
-    overrides = get_diff_overrides('1078039113')
+    print_unusual_revs("1516944123", hide_explained=False)
+    print_unusual_revs("1078039113", hide_explained=False)
+    #sheet1 = get_rev_as_list('1516944123', 1022)
+    #sheet2 = get_rev_as_list('1516944123', 1023)
     #diff = diffSheets(sheet1, sheet2)
-    diff = get_diff_from_override(overrides[1])
-    print(diff)
-    print(get_row_map(len(sheet1), len(sheet2), diff))
+    #print(diff)
+    #print(get_row_map(len(sheet1), len(sheet2), diff))

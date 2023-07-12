@@ -1,3 +1,4 @@
+from collections import defaultdict
 from difflib import SequenceMatcher
 from typing import OrderedDict
 
@@ -14,37 +15,36 @@ def diffSheets(sheet1: list[list[str]], sheet2: list[list[str]]):
     imsheet2 = [tuple(r[1:]) for r in sheet2]
     diff = SequenceMatcher(None, imsheet1, imsheet2)
     # since order might matter later on
-    changed_rows1 = OrderedDict()
-    changed_rows2 = OrderedDict()
+    changed_rows1 = defaultdict(list)
+    changed_rows2 = defaultdict(list)
     for tag, i1, i2, j1, j2 in diff.get_opcodes():
         if tag == 'replace':
             # imsheet1[i1:i2] present in sheet1 but not sheet2
             # imsheet2[j1:j2] present in sheet2 but not sheet1
             for i in range(i1, i2):
-                changed_rows1[imsheet1[i]] = i
+                changed_rows1[imsheet1[i]].append(i)
             for j in range(j1, j2):
-                changed_rows2[imsheet2[j]] = j
+                changed_rows2[imsheet2[j]].append(j)
         elif tag == 'delete':
             # imsheet1[i1:i2] is present in sheet1 but not sheet2
             for i in range(i1, i2):
-                changed_rows1[imsheet1[i]] = i
+                changed_rows1[imsheet1[i]].append(i)
         elif tag == 'insert':
             # imsheet2[j1:j2] present in sheet2 but not sheet1
             for j in range(j1, j2):
-                changed_rows2[imsheet2[j]] = j
+                changed_rows2[imsheet2[j]].append(j)
     moved = []
     added = []
     removed = []
     modified = []
-    for row, i1 in changed_rows1.items():
+    for row, indices1 in changed_rows1.items():
         if row in changed_rows2:
-            i2 = changed_rows2[row]
-            moved.append((i1, i2))
-        else:
-            removed.append(i1)
-    for row, i in changed_rows2.items():
-        if row not in changed_rows1:
-            added.append(i)
+            indices2 = changed_rows2[row]
+            while len(indices1) > 0 and len(indices2) > 0:
+                moved.append((indices1.pop(0), indices2.pop(0)))
+            removed.extend(indices1)
+    for row, indices in changed_rows2.items():
+        added.extend(indices)
     added.sort()
     removed.sort()
     # heuristic: in this case, assume that order is preserved

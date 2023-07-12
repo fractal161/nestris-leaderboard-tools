@@ -31,18 +31,24 @@ def print_distinct_sheet_headers(name):
                 last_headers = headers
             i += 1
 
-def print_unexplained_unusual_revs(id):
+def print_unusual_revs(id, hide_explained=True):
     revs = get_clean_revs(id)
     special = get_clean_unusual_revs(id)
+    overrides = get_diff_overrides(id)
     i = 0
     for rev1, rev2 in zip(revs[:-1], revs[1:]):
-        if rev1 in special and rev2 in special:
+        if hide_explained and rev1 in special and rev2 in special:
             continue
         sheet1 = get_rev_as_list(id, rev1)
         sheet2 = get_rev_as_list(id, rev2)
         diff = diffSheets(sheet1, sheet2)
-        if len(diff['added']) > 1 or len(diff['removed']) > 1:
+        is_handled = False
+        for override in overrides:
+            if override['start'] == rev1 and override['end'] == rev2:
+                is_handled = True
+        if not is_handled and len(diff['added']) > 0 and len(diff['removed']) > 0:
             print(f'{i}:', rev1, rev2)
+            print(diff)
             i += 1
 
 def print_distinct_names(id):
@@ -62,5 +68,5 @@ def print_distinct_names(id):
 if __name__ == '__main__':
     # print_distinct_sheet_headers("NTSC 0-19 Score")
     # df = get_rev_as_df("1078039113", 3799)
-    print_distinct_names("1516944123")
-    print_distinct_names("1078039113")
+    print_unusual_revs("1516944123", hide_explained=False)
+    print_unusual_revs("1078039113", hide_explained=False)

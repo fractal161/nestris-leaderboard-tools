@@ -71,6 +71,10 @@ def get_clean_revs(id: str) -> list[int]:
             clean.append(rev)
     return clean
 
+def get_diff_overrides(id: str):
+    with open(f'findings/sheets/{id}/overrides.json', 'r') as f:
+        return json.load(f)
+
 def get_sheet_history() -> SheetHistory:
     with open('data/sheet_history.json', 'r') as f:
         return json.load(f)

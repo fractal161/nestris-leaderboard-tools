@@ -1,6 +1,5 @@
 from collections import defaultdict
 from difflib import SequenceMatcher
-from typing import OrderedDict
 
 '''
 basically copy the strategy from the ts version
@@ -42,7 +41,7 @@ def diffSheets(sheet1: list[list[str]], sheet2: list[list[str]]):
             indices2 = changed_rows2[row]
             while len(indices1) > 0 and len(indices2) > 0:
                 moved.append((indices1.pop(0), indices2.pop(0)))
-            removed.extend(indices1)
+        removed.extend(indices1)
     for row, indices in changed_rows2.items():
         added.extend(indices)
     added.sort()

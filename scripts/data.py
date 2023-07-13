@@ -28,9 +28,10 @@ def get_rev_as_df(id: str, rev: int) -> pd.DataFrame:
                 break
         if len(headers) == 0:
             raise ValueError('BAD REVISION')
-        df = pd.read_csv(f'data/revs/{id}/{rev}.csv')
+        df = pd.read_csv(f'data/revs/{id}/{rev}.csv', dtype='str')
         df.columns.values[:len(headers)] = headers
-        return df
+        # drop other columns (TODO: check for lost data??)
+        return df.iloc[:,:len(headers)]
 
 def get_unique_revs(id: str) -> list[int]:
     with open(f'findings/sheets/{id}/unique_revs.json', 'r') as f:

@@ -40,7 +40,7 @@ def diffSheets(sheet1: list[list[str]], sheet2: list[list[str]]):
         if row in changed_rows2:
             indices2 = changed_rows2[row]
             while len(indices1) > 0 and len(indices2) > 0:
-                moved.append((indices1.pop(0), indices2.pop(0)))
+                moved.append((indices1.pop(), indices2.pop()))
         removed.extend(indices1)
     for row, indices in changed_rows2.items():
         added.extend(indices)

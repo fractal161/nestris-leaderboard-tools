@@ -31,10 +31,11 @@ def print_distinct_sheet_headers(name):
                 last_headers = headers
             i += 1
 
-def print_unusual_revs(id, hide_explained=True):
+def print_unusual_revs(id, hide_explained=False):
     revs = get_clean_revs(id)
     i = 0
     for rev1, rev2 in zip(revs[:-1], revs[1:]):
+        # TODO this is clearly wrong?
         if hide_explained:
             continue
         if not is_diff_normal(id, rev1, rev2):
@@ -65,41 +66,54 @@ def get_diff_from_override(override):
 
 # from the diff object, return list of pairs, where each pair contains the
 # corresponding indices. None on either side implies an add or remove
-def get_row_map(len1, len2, diff):
-    row_map = []
+def get_row_map(id, rev1, rev2):
+    sheet1 = get_rev_as_list(id, rev1)
+    sheet2 = get_rev_as_list(id, rev2)
+    len1, len2 = len(sheet1), len(sheet2)
+    overrides = get_diff_overrides(id)
+    is_override = False
+    diff = {}
+    for override in overrides:
+        if override['start'] == rev1 and override['end'] == rev2:
+            diff = get_diff_from_override(override)
+            is_override = True
+    if not is_override:
+        diff = diffSheets(sheet1, sheet2)
+    # MAIN IDEA: any index not explicitly mentioned in the diff is moved,
+    # and the order in which these come is the order in which they're mapped
     old_moved, new_moved = (), ()
     if len(diff['moved']) > 0:
         old_moved, new_moved = zip(*diff['moved'])
     old_mod, new_mod = (), ()
     if len(diff['modified']) > 0:
         old_mod, new_mod = zip(*diff['modified'])
-    old_map = old_moved + old_mod
-    new_map = new_moved + new_mod
-    added = diff['added']
-    removed = diff['removed']
     index1, index2 = 0, 0
+    moved = [(i, j) for i, j in diff['moved']]
     while index1 < len1 or index2 < len2:
-        if index1 in removed:
-            while index1 in removed:
-                row_map.append((index1, None))
-                index1 += 1
-        elif index2 in added:
-            while index2 in added:
-                row_map.append((None, index2))
-                index2 += 1
-        elif index1 in old_map:
-            pos = old_map.index(index1)
-            row_map.append((index1, new_map[pos]))
+        while index1 < len1 and (
+            index1 in old_moved or
+            index1 in old_mod or
+            index1 in diff['removed']
+        ):
             index1 += 1
+        while index2 < len2 and (
+            index2 in new_moved or
+            index2 in new_mod or
+            index2 in diff['added']
+        ):
+            index2 += 1
+        if index1 == len1 or index2 == len2:
+            assert index1 == len1 and index2 == len2
         else:
-            while index2 in new_map:
-                index2 += 1
-            if index2 < len2:
-                row_map.append((index1, index2))
-                index1 += 1
-                index2 += 1
-    assert index1 == len1 and index2 == len2
-    return row_map
+            moved.append((index1, index2))
+            index1 += 1
+            index2 += 1
+    return dict(
+        added=diff['added'],
+        removed=diff['removed'],
+        moved=moved,
+        modified=diff['modified'],
+    )
 
 def print_distinct_names(id):
     revs = get_clean_revs(id)
@@ -116,16 +130,122 @@ def print_distinct_names(id):
     print(len(players), 'total names')
 
 # the Most Important Function
-def get_all_player_histories(id: int):
-    overrides = get_diff_overrides('1516944123')
+def compute_all_player_histories(id: str):
+    revs = get_clean_revs(id)
+    # maintain row history for individual rows somehow
+    # each row object has an id (player_id)
+    # each row object has a current index, representing its presence in the
+    # current revision. use separate array for this
+
+    first_rev = get_rev_as_df(id, revs[0])
+    first_rev.insert(0, 'rev', revs[0])
+    next_player_id = 0
+    all_updates = pd.DataFrame()
+    last_player_rows = []
+    # the ith pandas row is the (i+1)st row in the sheet array, so we use
+    # None as a dummy element. The exception is if there are no headers detected,
+    active_player_ids: list[int|None] = [None]
+    #if len(first_revs
+    #
+    def add_row(player_id, row):
+        nonlocal all_updates
+        nonlocal last_player_rows
+        row_with_id = pd.concat([
+            pd.Series({'player_id': player_id}),
+            row
+        ])
+        row_df = pd.DataFrame(row_with_id).transpose()
+        all_updates = pd.concat([all_updates, row_df], ignore_index=True)
+        # prefer row_df's version of columns
+        all_updates = all_updates[row_df.columns]
+        # update most recent index map
+        assert player_id <= len(last_player_rows)
+        if player_id == len(last_player_rows):
+            last_player_rows.append(len(all_updates)-1)
+        else:
+            last_player_rows[player_id] = len(all_updates)-1
+
+    # initialize with data in first rev, where each row is new
+    for _, row in first_rev.iterrows():
+        # remember that df indices are one less than actual
+        # because header isn't counted!
+        new_row = row
+        if 'rank' in new_row:
+            new_row = row.drop(['rank'])
+        add_row(next_player_id, new_row)
+        active_player_ids.append(next_player_id)
+        next_player_id += 1
+    # use transitions between rows
+    for rev1, rev2 in zip(revs[:-1], revs[1:]):
+        print('Parsing rev', rev2)
+        # get row map from diff
+        row_map = get_row_map(id, rev1, rev2)
+        # first row is always header, since we made sure of that
+        new_sheet_df = get_rev_as_df(id, rev2)
+
+        new_active_ids: list[int|None] = [
+            None for _ in range(len(get_rev_as_list(id, rev2)))
+        ]
+        # removed rows don't need to be considered
+        # when looping through moved rows, only update the player_index location
+        for index1, index2 in row_map['moved']:
+            if index2 == None or index2 == 0:
+                continue
+            new_active_ids[index2] = active_player_ids[index1]
+        # when looping through modified rows, do the full update
+        for index1, index2 in row_map['modified']:
+            # signifies that the player_id is done.
+            # this will not be copied over to the next iteration
+            if index2 == None or index2 == 0:
+                continue
+            player_id = active_player_ids[index1]
+            if player_id == None:
+                raise ValueError('This shouldn\'t happen')
+            #print(index1, index2, player_id)
+            # check if row should be updated, then update the player map
+            player_index = last_player_rows[player_id]
+            last_player_row = all_updates.iloc[player_index, 2:]
+            # ignore first two entries, since they are always id, rev
+            new_row = new_sheet_df.iloc[index2-1]
+            # ignore rank, since this changes a lot
+            #if 'rank' in new_row:
+            #    new_row.drop(['rank'])
+            if not last_player_row.equals(new_row):
+            #if not np.array_equal(last_player_row, new_row, equal_nan=True):
+                # add rev, then add row
+                new_row = pd.concat([pd.Series({'rev': rev2}), new_row])
+                add_row(player_id, new_row)
+            # update active_player_ids
+            new_active_ids[index2] = player_id
+
+        for index in row_map['added']:
+            # basically repeat the process for adding a new thing
+            new_row = new_sheet_df.iloc[index-1]
+            # ignore rank, since this changes a lot
+            if 'rank' in new_row:
+                new_row.drop(['rank'])
+            new_row = pd.concat([pd.Series({'rev': rev2}), new_row])
+            add_row(next_player_id, new_row)
+            active_player_ids.append(next_player_id)
+            new_active_ids[index] = next_player_id
+            next_player_id += 1
+
+        assert all(i != None for i in new_active_ids[1:])
+        active_player_ids = new_active_ids
+    # TODO: ignore player_id and rev when dropping
+    print(all_updates.dropna(how='all')[all_updates['player_id'] == 0].to_string())
+    return
+    if not os.path.exists(f'findings/sheets/{id}/players'):
+        os.makedirs(f'findings/sheets/{id}/players')
+    # remove player_ids that only have rows that are full NaNs
+    # write each row history to file?
 
 if __name__ == '__main__':
-    # print_distinct_sheet_headers("NTSC 0-19 Score")
-    # df = get_rev_as_df("1078039113", 3799)
-    print_unusual_revs("1516944123", hide_explained=False)
-    print_unusual_revs("1078039113", hide_explained=False)
-    #sheet1 = get_rev_as_list('1516944123', 1022)
-    #sheet2 = get_rev_as_list('1516944123', 1023)
-    #diff = diffSheets(sheet1, sheet2)
-    #print(diff)
-    #print(get_row_map(len(sheet1), len(sheet2), diff))
+    # Use to filter out versions with bad headers
+    #print_distinct_sheet_headers("NTSC 0-19 Score")
+
+    # Check that all unusual revs are accounted for
+    #print_unusual_revs("1516944123", hide_explained=False)
+    #print_unusual_revs("1078039113", hide_explained=False)
+    compute_all_player_histories('1078039113')
+    #print(get_row_map('1078039113', 1279, 1280))

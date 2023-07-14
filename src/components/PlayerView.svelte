@@ -98,8 +98,8 @@
         <tbody>
           {#each scoreList.slice(1) as row}
             <tr>
-              {#each row as cell}
-                <td>
+              {#each row as cell, i}
+                <td class:field={i > 1}>
                   {cell}
                 </td>
               {/each}
@@ -159,7 +159,7 @@
   }
   table {
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: 12px;
   }
   td,
   th {
@@ -172,5 +172,15 @@
     padding-top: 3px;
     padding-bottom: 3px;
     height: 18px; /* kinda bad but works for now */
+  }
+  td:nth-child(-n+2) {
+    border: none;
+    padding: 3px;
+  }
+  td:nth-child(-n+2):hover ~ td.field {
+    background-color: red;
+  }
+  td.field:hover {
+    background-color: red;
   }
 </style>

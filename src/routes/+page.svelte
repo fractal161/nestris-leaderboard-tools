@@ -3,6 +3,7 @@
   import PlayerView from "$components/PlayerView.svelte";
   import type { DualViewProps } from "$types/client";
   import type { PageServerData } from "./$types";
+  import { formatFullDate } from "$lib/format";
   import { onMount } from "svelte";
   export let data: PageServerData;
   let MIN_INDEX: number;
@@ -42,17 +43,6 @@
   // for keeping playerview consistent
   let selectedPlayer: string | undefined = undefined;
 
-  const formatTime = (time: number): string => {
-    const date = new Date(time);
-    const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
-    const d = date.getUTCDate().toString().padStart(2, "0");
-    const y = date.getUTCFullYear().toString().padStart(2, "0");
-    const h = date.getUTCHours().toString().padStart(2, "0");
-    const m = date.getUTCMinutes().toString().padStart(2, "0");
-    const s = date.getUTCSeconds().toString().padStart(2, "0");
-    return `${mm}/${d}/${y} ${h}:${m}:${s} UTC`;
-  };
-
   const fetchSheetByIndex = async (
     view: number,
     id: string,
@@ -81,7 +71,7 @@
       const { cells, context, rev } = await sheetFetch.json();
       dualViewProps[view] = {
         title: rev.toString() + ": " + context.name,
-        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${
+        subtitle: `${formatFullDate(context.time) ?? "unknown time"} by ${
           context.editors ?? "unknown editor"
         }`,
         cells: cells,
@@ -119,7 +109,7 @@
       const { cells, context, rev } = await boardFetch.json();
       dualViewProps[view] = {
         title: rev.toString() + ": " + context.name,
-        subtitle: `${formatTime(context.time) ?? "unknown time"} by ${
+        subtitle: `${formatFullDate(context.time) ?? "unknown time"} by ${
           context.editors ?? "unknown editor"
         }`,
         cells: cells,

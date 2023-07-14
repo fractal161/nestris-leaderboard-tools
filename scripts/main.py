@@ -232,13 +232,27 @@ def compute_all_player_histories(id: str):
 
         assert all(i != None for i in new_active_ids[1:])
         active_player_ids = new_active_ids
-    # TODO: ignore player_id and rev when dropping
-    print(all_updates.dropna(how='all')[all_updates['player_id'] == 0].to_string())
-    return
-    if not os.path.exists(f'findings/sheets/{id}/players'):
-        os.makedirs(f'findings/sheets/{id}/players')
     # remove player_ids that only have rows that are full NaNs
-    # write each row history to file?
+    all_updates = all_updates[all_updates
+        .drop(columns=['rev', 'player_id'])
+        .apply(lambda x: not pd.isna(x).all(), axis=1)
+    ]
+    all_player_ids = all_updates.player_id.unique()
+    player_folder = f'findings/sheets/{id}/players'
+    if not os.path.exists(player_folder):
+        os.makedirs(f'findings/sheets/{id}/players')
+    # clean up files
+    for filename in os.listdir(player_folder):
+        path = os.path.join(player_folder, filename)
+        if os.path.isfile(path):
+            os.unlink(path)
+    # write each row history to file
+    for player_id in all_player_ids:
+        #print(player_id)
+        player_history = all_updates[all_updates.player_id == player_id]
+        player_history = player_history.drop(columns=['player_id'])
+        print('Writing', player_history.iloc[-1]['name'])
+        player_history.to_csv(f'findings/sheets/{id}/players/{player_id}.csv', index=False)
 
 if __name__ == '__main__':
     # Use to filter out versions with bad headers
@@ -247,5 +261,6 @@ if __name__ == '__main__':
     # Check that all unusual revs are accounted for
     #print_unusual_revs("1516944123", hide_explained=False)
     #print_unusual_revs("1078039113", hide_explained=False)
+
+    # Write player histories to their own files
     compute_all_player_histories('1078039113')
-    #print(get_row_map('1078039113', 1279, 1280))

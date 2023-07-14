@@ -22,4 +22,3 @@ export const parseCsvFile = async (filename: string): Promise<string[][]> => {
     parser.on("end", () => resolve(rows.length > 0 ? rows : [[]]));
   });
 };
-

@@ -80,17 +80,16 @@
   </div>
   <div class="scores">
     <h3>
-      {sheetId || "waiting for player list..."}{selectedPlayer === undefined ? "" : ": " + selectedPlayer}
+      {sheetId || "waiting for player list..."}{selectedPlayer === undefined
+        ? ""
+        : ": " + selectedPlayer}
     </h3>
     <div class="scroll-container">
       <table>
         <thead>
           <tr>
             {#each scoreList[0] as cell}
-              <th
-                role="cell"
-                tabindex="-1"
-              >
+              <th role="cell" tabindex="-1">
                 {cell}
               </th>
             {/each}
@@ -100,8 +99,7 @@
           {#each scoreList.slice(1) as row}
             <tr>
               {#each row as cell}
-                <td
-                >
+                <td>
                   {cell}
                 </td>
               {/each}

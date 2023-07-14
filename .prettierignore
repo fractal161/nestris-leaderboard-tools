@@ -4,6 +4,7 @@ node_modules
 /.svelte-kit
 /package
 /data
+/findings
 .env
 .env.*
 !.env.example

@@ -9,7 +9,11 @@ export async function GET(req: RequestEvent): Promise<Response> {
     const sheet =
       req.url.searchParams.get("sheet") ?? assert.fail("sheet is null");
     const players = JSON.parse(
-      (await fs.promises.readFile(`findings/sheets/${sheet}/players/names.json`)).toString(),
+      (
+        await fs.promises.readFile(
+          `findings/sheets/${sheet}/players/names.json`,
+        )
+      ).toString(),
     );
     return json(Object.keys(players));
   } catch (err) {

@@ -53,7 +53,9 @@ async function getUniqueCount(name: string): Promise<number> {
     // that's at most sheet.end
     const uniqueRevs = JSON.parse(
       (
-        await fs.promises.readFile(`findings/sheets/${sheet.gid}/unique_revs.json`)
+        await fs.promises.readFile(
+          `findings/sheets/${sheet.gid}/unique_revs.json`,
+        )
       ).toString(),
     );
     let start = 0;

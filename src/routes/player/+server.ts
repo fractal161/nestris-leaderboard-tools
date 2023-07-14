@@ -11,10 +11,16 @@ export async function GET(req: RequestEvent): Promise<Response> {
     const sheet =
       req.url.searchParams.get("sheet") ?? assert.fail("sheet is null");
     const players = JSON.parse(
-      (await fs.promises.readFile(`findings/sheets/${sheet}/players/names.json`)).toString(),
+      (
+        await fs.promises.readFile(
+          `findings/sheets/${sheet}/players/names.json`,
+        )
+      ).toString(),
     );
     const id = players[player];
-    const history = await parseCsvFile(`findings/sheets/${sheet}/players/${id}.csv`);
+    const history = await parseCsvFile(
+      `findings/sheets/${sheet}/players/${id}.csv`,
+    );
     return json(history);
   } catch (err) {
     console.error(err);

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  export let leaderboard: string;
+  export let sheetId: string;
   export let selectedPlayer: string | undefined = undefined;
   // any future state that should be saved upon context switch should be
   // exported as a prop here, so the root page can bind to it.
@@ -16,7 +16,7 @@
       "/player?" +
         new URLSearchParams({
           player: selectedPlayer,
-          board: leaderboard,
+          sheet: sheetId,
         }),
       {
         method: "GET",
@@ -30,13 +30,14 @@
     }
     scoreList = await scoreFetch.json();
   };
-  const fetchPlayerList = async (leaderboard: string): Promise<void> => {
+  const fetchPlayerList = async (sheetId: string): Promise<void> => {
     if (!mounted) return;
+    if (sheetId === undefined) return;
     // fetch list of players
     const playerListFetch = await fetch(
       "/player/all?" +
         new URLSearchParams({
-          board: leaderboard,
+          sheet: sheetId,
         }),
       {
         method: "GET",
@@ -52,10 +53,8 @@
   };
   onMount(async () => {
     mounted = true;
-    await fetchPlayerList(leaderboard);
-    await fetchPlayerScores(selectedPlayer);
   });
-  $: fetchPlayerList(leaderboard);
+  $: fetchPlayerList(sheetId);
   $: fetchPlayerScores(selectedPlayer);
 </script>
 
@@ -78,7 +77,7 @@
   </div>
   <div class="scores">
     <h3>
-      {leaderboard}{selectedPlayer === undefined ? "" : ": " + selectedPlayer}
+      {sheetId}{selectedPlayer === undefined ? "" : ": " + selectedPlayer}
     </h3>
     <div class="scroll-container">
       <ul>

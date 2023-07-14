@@ -6,8 +6,8 @@ export async function GET(req: RequestEvent): Promise<Response> {
   try {
     const player =
       req.url.searchParams.get("player") ?? assert.fail("player is null");
-    const board =
-      req.url.searchParams.get("board") ?? assert.fail("leaderboard is null");
+    const sheet =
+      req.url.searchParams.get("sheet") ?? assert.fail("sheet is null");
     return json([
       [player, "score1"],
       [player, "score2"],

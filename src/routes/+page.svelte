@@ -21,7 +21,7 @@
   } = {};
   let menuBoard = "";
   // TODO: change to default
-  let mode = "leaderboard";
+  let mode = "sheet";
   let view = "player";
   let menuIndex: number;
   let showUnique = true;
@@ -234,14 +234,14 @@
 
 <div id="layout">
   <div id="view">
-    {#if mode === "leaderboard" && view === "player"}
-      <PlayerView leaderboard={menuBoard} bind:selectedPlayer />
+    {#if mode === "sheet" && view === "player"}
+      <PlayerView sheetId={menuGid} bind:selectedPlayer />
     {:else}
       <DualView leftProps={dualViewProps[0]} rightProps={dualViewProps[1]} />
     {/if}
   </div>
 
-  {#if !(mode === "leaderboard" && view === "player")}
+  {#if !(mode === "sheet" && view === "player")}
     <div id="scrollbar">
       <p class="scrollbar-text">Index:</p>
       <input
@@ -288,6 +288,12 @@
           </option>
         {/each}
       </select>
+
+      <p>View:</p>
+      <select bind:value={view}>
+        <option value="sheet">sheet</option>
+        <option value="player">player</option>
+      </select>
     {:else if mode === "leaderboard"}
       <p>Leaderboard:</p>
       <select bind:value={menuBoard}>
@@ -296,12 +302,6 @@
             {id}
           </option>
         {/each}
-      </select>
-
-      <p>View:</p>
-      <select bind:value={view}>
-        <option value="sheet">sheet</option>
-        <option value="player">player</option>
       </select>
     {/if}
     <p>Hide identical revisions:</p>

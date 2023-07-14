@@ -1,5 +1,4 @@
 from collections import defaultdict
-import re
 
 from data import *
 from diff import diffSheets
@@ -150,7 +149,7 @@ def compute_all_player_histories(id: str):
     active_player_ids: list[int|None] = [None]
     #if len(first_revs
     #
-    def add_row(player_id, row):
+    def add_row(player_id, row, is_deletion=False):
         nonlocal all_updates
         nonlocal last_player_rows
         row_with_id = pd.concat([
@@ -160,7 +159,8 @@ def compute_all_player_histories(id: str):
         row_df = pd.DataFrame(row_with_id).transpose()
         all_updates = pd.concat([all_updates, row_df], ignore_index=True)
         # prefer row_df's version of columns
-        all_updates = all_updates[row_df.columns]
+        if not is_deletion:
+            all_updates = all_updates[row_df.columns]
         # update most recent index map
         assert player_id <= len(last_player_rows)
         if player_id == len(last_player_rows):
@@ -189,7 +189,12 @@ def compute_all_player_histories(id: str):
         new_active_ids: list[int|None] = [
             None for _ in range(len(get_rev_as_list(id, rev2)))
         ]
-        # removed rows don't need to be considered
+        # removed rows are given special entries
+        for index in row_map['removed']:
+            player_id = active_player_ids[index]
+            assert player_id != None
+            new_row = pd.Series({'Rev': rev2, 'Name': 'ROW DELETED'})
+            add_row(player_id, new_row, is_deletion=True)
         # when looping through moved rows, only update the player_index location
         for index1, index2 in row_map['moved']:
             if index2 == None or index2 == 0:
@@ -256,8 +261,19 @@ def compute_all_player_histories(id: str):
         player_history = player_history.drop(columns=['player_id'])
         if 'Rank' in player_history.columns:
             player_history = player_history.drop(columns=['Rank'])
-        print('Writing', player_history.iloc[-1]['Name'])
+        # if only two rows and second is 'ROW DELETED', then
+        # probably a useless row, and shouldn't be written
+        if len(player_history) < 3 and player_history.iloc[-1]['Name'] == 'ROW DELETED':
+            continue
+        print('Writing', get_most_recent_name(player_history))
         player_history.to_csv(f'findings/sheets/{id}/players/{player_id}.csv', index=False)
+
+def get_most_recent_name(history):
+    for i in range(len(history)-1, -1, -1):
+        test_name = str(history.iloc[i]['Name'])
+        if test_name != 'nan' and test_name != 'ROW DELETED':
+            return test_name
+    return 'nan'
 
 def write_player_names(id: str):
     player_ids = []
@@ -270,7 +286,7 @@ def write_player_names(id: str):
     player_names = {}
     for player_id in player_ids:
         history = pd.read_csv(f'findings/sheets/{id}/players/{player_id}.csv')
-        name = str(history.iloc[-1]['Name'])
+        name = get_most_recent_name(history)
         player_name_counts[name] += 1
         if player_name_counts[name] > 1:
             player_names[name + f' ({player_name_counts[name]})'] = player_id

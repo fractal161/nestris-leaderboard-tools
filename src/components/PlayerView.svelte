@@ -173,11 +173,11 @@
     padding-bottom: 3px;
     height: 18px; /* kinda bad but works for now */
   }
-  td:nth-child(-n+2) {
+  td:nth-child(-n + 2) {
     border: none;
     padding: 3px;
   }
-  td:nth-child(-n+2):hover ~ td.field {
+  td:nth-child(-n + 2):hover ~ td.field {
     background-color: red;
   }
   td.field:hover {

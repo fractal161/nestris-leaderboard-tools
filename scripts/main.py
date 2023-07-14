@@ -1,3 +1,6 @@
+from collections import defaultdict
+import re
+
 from data import *
 from diff import diffSheets
 
@@ -254,6 +257,26 @@ def compute_all_player_histories(id: str):
         print('Writing', player_history.iloc[-1]['name'])
         player_history.to_csv(f'findings/sheets/{id}/players/{player_id}.csv', index=False)
 
+def write_player_names(id: str):
+    player_ids = []
+    for filename in os.listdir(f'findings/sheets/{id}/players'):
+        # attempt to extract number
+        if filename.endswith('.csv'):
+            player_ids.append(int(filename[:-4]))
+    player_ids.sort()
+    player_name_counts = defaultdict(int)
+    player_names = {}
+    for player_id in player_ids:
+        history = pd.read_csv(f'findings/sheets/{id}/players/{player_id}.csv')
+        name = str(history.iloc[-1]['name'])
+        player_name_counts[name] += 1
+        if player_name_counts[name] > 1:
+            player_names[name + f' ({player_name_counts[name]})'] = player_id
+        else:
+            player_names[name] = player_id
+    with open(f'findings/sheets/{id}/players/names.json', 'w') as f:
+        json.dump(player_names, f, indent=2)
+
 if __name__ == '__main__':
     # Use to filter out versions with bad headers
     #print_distinct_sheet_headers("NTSC 0-19 Score")
@@ -263,4 +286,8 @@ if __name__ == '__main__':
     #print_unusual_revs("1078039113", hide_explained=False)
 
     # Write player histories to their own files
-    compute_all_player_histories('1078039113')
+    #compute_all_player_histories('1078039113')
+
+    # After player histories are found, write the most recent names
+    # used for each one
+    write_player_names('1078039113')

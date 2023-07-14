@@ -99,7 +99,7 @@
           {#each scoreList.slice(1) as row}
             <tr>
               {#each row as cell, i}
-                <td class:field={i > 1}>
+                <td class:field={i > 1} class:new-day={row[0] != ""}>
                   {cell}
                 </td>
               {/each}
@@ -174,13 +174,33 @@
     height: 18px; /* kinda bad but works for now */
   }
   td:nth-child(-n + 2) {
-    border: none;
     padding: 3px;
+    border-right: 2px solid black;
+  }
+  th:nth-child(-n + 2) {
+    border-right: 2px solid black;
+  }
+  th:first-child {
+    border-right: 1px solid grey;
+    border-left: none;
+  }
+  td:first-child {
+    border: none;
   }
   td:nth-child(-n + 2):hover ~ td.field {
     background-color: red;
   }
+  td:last-child,
+  th:last-child {
+    border-right: none;
+  }
   td.field:hover {
     background-color: red;
+  }
+  td.new-day {
+    border-top: 2px solid black;
+  }
+  tr:last-child {
+    border-bottom: 2px solid black;
   }
 </style>

@@ -53,6 +53,9 @@
   };
   onMount(async () => {
     mounted = true;
+    console.log("PlayerView mounted");
+    if (sheetId !== undefined) await fetchPlayerList(sheetId);
+    if (selectedPlayer !== undefined) await fetchPlayerScores(selectedPlayer);
   });
   $: fetchPlayerList(sheetId);
   $: fetchPlayerScores(selectedPlayer);
@@ -70,21 +73,42 @@
           id={player}
           value={player}
         />
-        <label class="player-option" for={player}>{player} </label>
+        <label class="player-option" for={player}>{player}</label>
       {/each}
     </div>
     <button type="button">Confirm</button>
   </div>
   <div class="scores">
     <h3>
-      {sheetId}{selectedPlayer === undefined ? "" : ": " + selectedPlayer}
+      {sheetId || "waiting for player list..."}{selectedPlayer === undefined ? "" : ": " + selectedPlayer}
     </h3>
     <div class="scroll-container">
-      <ul>
-        {#each scoreList as score}
-          <li value={score}>{score}</li>
-        {/each}
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            {#each scoreList[0] as cell}
+              <th
+                role="cell"
+                tabindex="-1"
+              >
+                {cell}
+              </th>
+            {/each}
+          </tr>
+        </thead>
+        <tbody>
+          {#each scoreList.slice(1) as row}
+            <tr>
+              {#each row as cell}
+                <td
+                >
+                  {cell}
+                </td>
+              {/each}
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -92,18 +116,6 @@
 <style>
   h3 {
     margin: 4px;
-  }
-  ul {
-    list-style: none;
-    text-align: left;
-    padding: 0px;
-    margin: 0px;
-    border-collapse: collapse;
-  }
-  li {
-    padding-left: 5px;
-    border-top: 1px solid grey;
-    border-bottom: 1px solid grey;
   }
   .main {
     display: flex;
@@ -117,33 +129,50 @@
     flex: 1;
   }
   .scroll-container {
+    position: relative;
     border-top: 1px solid grey;
     overflow: scroll;
     height: 100%;
+    width: 100%;
   }
   .scores {
     border: 1px solid grey;
-    flex: 5;
     display: flex;
     flex-direction: column;
+    flex: 5;
+    min-width: 0px;
   }
   .player-option {
     display: block;
     border: 1px solid grey;
-    margin: 0px -1px 0px -1px;
+    border-left-width: 0px;
+    border-right-width: 0px;
+    margin: 0px;
     padding-left: 5px;
   }
   .scroll-container input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
+    display: none;
   }
   .player-option:hover {
     background-color: lightgrey;
   }
   .scroll-container input[type="radio"]:checked + label {
     background-color: lightblue;
+  }
+  table {
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  td,
+  th {
+    box-sizing: border-box;
+    border: 1px solid gray;
+    white-space: nowrap;
+    height: 12px; /* kinda bad but works for now */
+  }
+  td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    height: 18px; /* kinda bad but works for now */
   }
 </style>

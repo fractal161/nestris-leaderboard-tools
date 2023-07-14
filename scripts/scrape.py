@@ -9,16 +9,15 @@ from dotenv import dotenv_values
 
 env = dotenv_values(".env")
 
-def get_revs():
+def get_revs(gid, start, end):
     cj = cookiejar.MozillaCookieJar('data/cookies.txt')
     cj.load()
-    start, end = env['REV_START'], env['REV_END']
     assert(start != None and end != None)
     start, end = int(start), int(end)
     for i in range(start, end+1):
         start = timer()
         print(f'Fetching revision {i}')
-        rev_url = f'https://docs.google.com/spreadsheets/u/0/d/{env["SHEET_ID"]}/revisions/show?rev={i}&gid={env["GID"]}'
+        rev_url = f'https://docs.google.com/spreadsheets/u/0/d/{env["SHEET_ID"]}/revisions/show?rev={i}&gid={gid}'
         timeout = 30
         while True:
             try:
@@ -31,10 +30,18 @@ def get_revs():
         end = timer()
         print(f'Took {end - start:.2f} seconds')
 
-        if not os.path.exists(f'data/raws/{env["GID"]}'):
-            os.makedirs(f'data/raws/{env["GID"]}')
-        with open(f'data/raws/{env["GID"]}/{i}.html.gz', 'wb') as f:
+        if not os.path.exists(f'data/raws/{gid}'):
+            os.makedirs(f'data/raws/{gid}')
+        with open(f'data/raws/{gid}/{i}.html.gz', 'wb') as f:
             f.write(gzip.compress(r.content))
+
+def get_leaderboard_revs(board):
+    with open('data/leaderboards.json', 'r') as f:
+        leaderboards = json.load(f)
+        if not board in leaderboards:
+            raise ValueError('Invalid board name')
+        for info in leaderboards[board]:
+            get_revs(info['gid'], info['start'], info['end'])
 
 def get_timestamp_chunks():
     cj = cookiejar.MozillaCookieJar('data/cookies.txt')

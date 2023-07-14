@@ -141,7 +141,7 @@ def compute_all_player_histories(id: str):
     # current revision. use separate array for this
 
     first_rev = get_rev_as_df(id, revs[0])
-    first_rev.insert(0, 'rev', revs[0])
+    first_rev.insert(0, 'Rev', revs[0])
     next_player_id = 0
     all_updates = pd.DataFrame()
     last_player_rows = []
@@ -173,8 +173,8 @@ def compute_all_player_histories(id: str):
         # remember that df indices are one less than actual
         # because header isn't counted!
         new_row = row
-        if 'rank' in new_row:
-            new_row = row.drop(['rank'])
+        if 'Rank' in new_row:
+            new_row = row.drop(['Rank'])
         add_row(next_player_id, new_row)
         active_player_ids.append(next_player_id)
         next_player_id += 1
@@ -216,7 +216,7 @@ def compute_all_player_histories(id: str):
             if not last_player_row.equals(new_row):
             #if not np.array_equal(last_player_row, new_row, equal_nan=True):
                 # add rev, then add row
-                new_row = pd.concat([pd.Series({'rev': rev2}), new_row])
+                new_row = pd.concat([pd.Series({'Rev': rev2}), new_row])
                 add_row(player_id, new_row)
             # update active_player_ids
             new_active_ids[index2] = player_id
@@ -227,7 +227,7 @@ def compute_all_player_histories(id: str):
             # ignore rank, since this changes a lot
             if 'rank' in new_row:
                 new_row.drop(['rank'])
-            new_row = pd.concat([pd.Series({'rev': rev2}), new_row])
+            new_row = pd.concat([pd.Series({'Rev': rev2}), new_row])
             add_row(next_player_id, new_row)
             active_player_ids.append(next_player_id)
             new_active_ids[index] = next_player_id
@@ -237,7 +237,7 @@ def compute_all_player_histories(id: str):
         active_player_ids = new_active_ids
     # remove player_ids that only have rows that are full NaNs
     all_updates = all_updates[all_updates
-        .drop(columns=['rev', 'player_id'])
+        .drop(columns=['Rev', 'player_id'])
         .apply(lambda x: not pd.isna(x).all(), axis=1)
     ]
     all_player_ids = all_updates.player_id.unique()
@@ -254,7 +254,9 @@ def compute_all_player_histories(id: str):
         #print(player_id)
         player_history = all_updates[all_updates.player_id == player_id]
         player_history = player_history.drop(columns=['player_id'])
-        print('Writing', player_history.iloc[-1]['name'])
+        if 'Rank' in player_history.columns:
+            player_history = player_history.drop(columns=['Rank'])
+        print('Writing', player_history.iloc[-1]['Name'])
         player_history.to_csv(f'findings/sheets/{id}/players/{player_id}.csv', index=False)
 
 def write_player_names(id: str):
@@ -268,7 +270,7 @@ def write_player_names(id: str):
     player_names = {}
     for player_id in player_ids:
         history = pd.read_csv(f'findings/sheets/{id}/players/{player_id}.csv')
-        name = str(history.iloc[-1]['name'])
+        name = str(history.iloc[-1]['Name'])
         player_name_counts[name] += 1
         if player_name_counts[name] > 1:
             player_names[name + f' ({player_name_counts[name]})'] = player_id
@@ -286,7 +288,7 @@ if __name__ == '__main__':
     #print_unusual_revs("1078039113", hide_explained=False)
 
     # Write player histories to their own files
-    #compute_all_player_histories('1078039113')
+    compute_all_player_histories('1078039113')
 
     # After player histories are found, write the most recent names
     # used for each one

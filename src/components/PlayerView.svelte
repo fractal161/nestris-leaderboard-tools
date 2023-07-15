@@ -5,6 +5,8 @@
   // any future state that should be saved upon context switch should be
   // exported as a prop here, so the root page can bind to it.
   let playerList: Array<string> = [];
+  let activeProfiles: Array<string> = [];
+  let selectedProfile: string | undefined = undefined;
   let scoreInfo: {
     headers: Array<string>;
     entries: Array<{
@@ -66,6 +68,18 @@
   const handleClick = (row: number, col: number): void => {
     return;
   };
+  const addProfile = (e: KeyboardEvent): void => {
+    const input = e.target;
+    if (
+      input instanceof HTMLInputElement &&
+      e.key === "Enter" &&
+      !activeProfiles.includes(input.value)
+    ) {
+      if (activeProfiles.length === 0) selectedProfile = input.value;
+      activeProfiles = [...activeProfiles, input.value];
+      input.value = "";
+    }
+  };
   onMount(async () => {
     mounted = true;
     console.log("PlayerView mounted");
@@ -91,7 +105,6 @@
         <label class="player-option" for={player}>{player}</label>
       {/each}
     </div>
-    <button type="button">Confirm</button>
   </div>
   <div class="scores">
     <h3>
@@ -132,6 +145,28 @@
           {/each}
         </tbody>
       </table>
+    </div>
+    <div class="bottom">
+      <div class="add-profile-box">
+        Add:
+        <input
+          type="text"
+          id="new-profile"
+          name="new-profile"
+          on:keypress={addProfile}
+        />
+      </div>
+      <div class="profile-box">
+        Profile:
+        <select class="profiles" bind:value={selectedProfile}>
+          {#each activeProfiles as prof}
+            <option value={prof}>
+              {prof}
+            </option>
+          {/each}
+        </select>
+      </div>
+      <button type="button">Confirm</button>
     </div>
   </div>
 </div>
@@ -229,6 +264,10 @@
   td div {
     padding: 3px;
     height: 12px;
+  }
+  td div.selected {
+    padding: 3px;
+    height: 12px;
     background: repeating-linear-gradient(
       60deg,
       rgba(255, 0, 0, 0.2),
@@ -236,5 +275,32 @@
       rgba(255, 255, 255, 0) 2px,
       rgba(255, 255, 255, 0) 6px
     );
+  }
+  .bottom {
+    border-top: 3px solid grey;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+  }
+  .add-profile-box {
+    flex: 2;
+  }
+  .profile-box {
+    padding-left: 3px;
+    padding-right: 3px;
+    min-width: 0px;
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+  }
+  .profiles {
+    min-width: 0px;
+  }
+  .profiles option {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

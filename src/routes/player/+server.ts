@@ -27,31 +27,36 @@ export async function GET(req: RequestEvent): Promise<Response> {
       `findings/sheets/${sheet}/players/${id}.csv`,
     );
     // replace each revision by relevant time
-    const header = history[0];
-    assert(header !== undefined);
-    assert(header[0] == "Rev");
-    const new_history = [];
-    new_history.push(["Day", "Time"].concat(header.slice(1)));
+    const headers = history[0];
+    assert(headers !== undefined);
+    assert(headers[0] == "Rev");
+    const revs = history.slice(1).map((row) => parseInt(row[0]));
+    const fields = history.slice(1).map((row) => row.slice(1));
+    const dates: Array<[string, string]> = [];
     let lastDay: string | undefined = undefined;
-    for (const row of history.slice(1)) {
-      const rev = row[0];
-      assert(rev !== undefined);
+    for (const rev of revs) {
       const timestamp = timestamps[rev];
       assert(timestamp !== undefined);
-      const new_row = row.slice(1);
       // get day and time
       const time = formatTime(timestamp["time"]);
       const day = formatDay(timestamp["time"]);
-      new_row.unshift(time);
       if (lastDay === day) {
-        new_row.unshift("");
+        dates.push(["", time]);
       } else {
-        new_row.unshift(day);
+        dates.push([day, time]);
         lastDay = day;
       }
-      new_history.push(new_row);
     }
-    return json(new_history);
+    return json({
+      headers: headers.slice(1),
+      entries: fields.map((row, i) => {
+        return {
+          date: dates[i],
+          fields: row,
+        };
+      }),
+      revs: revs,
+    });
   } catch (err) {
     console.error(err);
     throw error(404, "bad");

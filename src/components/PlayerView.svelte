@@ -5,7 +5,18 @@
   // any future state that should be saved upon context switch should be
   // exported as a prop here, so the root page can bind to it.
   let playerList: Array<string> = [];
-  let scoreList: Array<Array<string>> = [[]];
+  let scoreInfo: {
+    headers: Array<string>;
+    entries: Array<{
+      date: [string, string];
+      fields: Array<string>;
+    }>;
+    revs: Array<number>;
+  } = {
+    headers: [],
+    entries: [],
+    revs: [],
+  };
   let mounted = false;
   const fetchPlayerScores = async (
     selectedPlayer: string | undefined,
@@ -28,7 +39,8 @@
     if (scoreFetch.status !== 200) {
       throw Error("error fetching player scores");
     }
-    scoreList = await scoreFetch.json();
+    scoreInfo = await scoreFetch.json();
+    // do something to set diff colors
   };
   const fetchPlayerList = async (sheetId: string): Promise<void> => {
     if (!mounted) return;
@@ -50,6 +62,9 @@
       throw Error("error fetching player list");
     }
     playerList = await playerListFetch.json();
+  };
+  const handleClick = (row: number, col: number): void => {
+    return;
   };
   onMount(async () => {
     mounted = true;
@@ -88,18 +103,28 @@
       <table>
         <thead>
           <tr>
-            {#each scoreList[0] as cell}
-              <th role="cell" tabindex="-1">
-                {cell}
+            {#if scoreInfo.entries.length > 0}
+              <th>Day</th>
+              <th>Time</th>
+            {/if}
+            {#each scoreInfo.headers as header}
+              <th>
+                {header}
               </th>
             {/each}
           </tr>
         </thead>
         <tbody>
-          {#each scoreList.slice(1) as row}
+          {#each scoreInfo.entries as row, i}
             <tr>
-              {#each row as cell, i}
-                <td class:field={i > 1} class:new-day={row[0] != ""}>
+              <td class:new-day={row.date[0] != ""}>{row.date[0]}</td>
+              <td class:new-day={row.date[0] != ""}>{row.date[1]}</td>
+              {#each row.fields as cell, j}
+                <td
+                  class="field"
+                  class:new-day={row.date[0] != ""}
+                  on:click={() => handleClick(i, j)}
+                >
                   {cell}
                 </td>
               {/each}
@@ -177,25 +202,24 @@
     padding: 3px;
     border-right: 2px solid black;
   }
-  th:nth-child(-n + 2) {
+  th:nth-child(2) {
     border-right: 2px solid black;
   }
   th:first-child {
-    border-right: 1px solid grey;
     border-left: none;
   }
   td:first-child {
     border: none;
   }
   td:nth-child(-n + 2):hover ~ td.field {
-    background-color: red;
+    background-color: lightblue;
   }
   td:last-child,
   th:last-child {
     border-right: none;
   }
   td.field:hover {
-    background-color: red;
+    background-color: lightblue;
   }
   td.new-day {
     border-top: 2px solid black;

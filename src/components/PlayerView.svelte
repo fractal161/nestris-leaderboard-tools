@@ -125,7 +125,7 @@
                   class:new-day={row.date[0] != ""}
                   on:click={() => handleClick(i, j)}
                 >
-                  {cell}
+                  <div>{cell}</div>
                 </td>
               {/each}
             </tr>
@@ -194,8 +194,7 @@
     height: 12px; /* kinda bad but works for now */
   }
   td {
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding: 0px;
     height: 18px; /* kinda bad but works for now */
   }
   td:nth-child(-n + 2) {
@@ -226,5 +225,16 @@
   }
   tr:last-child {
     border-bottom: 2px solid black;
+  }
+  td div {
+    padding: 3px;
+    height: 12px;
+    background: repeating-linear-gradient(
+      60deg,
+      rgba(255, 0, 0, 0.2),
+      rgba(255, 0, 0, 0.2) 2px,
+      rgba(255, 255, 255, 0) 2px,
+      rgba(255, 255, 255, 0) 6px
+    );
   }
 </style>

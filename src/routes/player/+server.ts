@@ -33,6 +33,7 @@ export async function GET(req: RequestEvent): Promise<Response> {
     const revs = history.slice(1).map((row) => parseInt(row[0]));
     const fields = history.slice(1).map((row) => row.slice(1));
     const dates: Array<[string, string]> = [];
+    const editors: Array<Array<string>> = [];
     let lastDay: string | undefined = undefined;
     for (const rev of revs) {
       const timestamp = timestamps[rev];
@@ -46,6 +47,8 @@ export async function GET(req: RequestEvent): Promise<Response> {
         dates.push([day, time]);
         lastDay = day;
       }
+      // update editors
+      editors.push(timestamp["editors"]);
     }
     return json({
       headers: headers.slice(1),
@@ -55,6 +58,7 @@ export async function GET(req: RequestEvent): Promise<Response> {
           fields: row,
         };
       }),
+      editors: editors,
       revs: revs,
     });
   } catch (err) {

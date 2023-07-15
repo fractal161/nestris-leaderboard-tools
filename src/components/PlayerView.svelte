@@ -13,13 +13,16 @@
       date: [string, string];
       fields: Array<string>;
     }>;
+    editors: Array<Array<string>>;
     revs: Array<number>;
   } = {
     headers: [],
     entries: [],
     revs: [],
+    editors: [],
   };
   let mounted = false;
+  let editorString = "";
   const fetchPlayerScores = async (
     selectedPlayer: string | undefined,
   ): Promise<void> => {
@@ -80,6 +83,10 @@
       input.value = "";
     }
   };
+  const setEditorString = (i: number): void => {
+    const editors = scoreInfo.editors[i];
+    editorString = editors.join(", ");
+  };
   onMount(async () => {
     mounted = true;
     console.log("PlayerView mounted");
@@ -93,6 +100,7 @@
 <div class="main">
   <div class="player-menu">
     <h3>Players</h3>
+    <br>
     <div class="scroll-container">
       {#each playerList as player}
         <input
@@ -112,6 +120,7 @@
         ? ""
         : ": " + selectedPlayer}
     </h3>
+    <p>Editors: {editorString}</p>
     <div class="scroll-container">
       <table>
         <thead>
@@ -130,13 +139,14 @@
         <tbody>
           {#each scoreInfo.entries as row, i}
             <tr>
-              <td class:new-day={row.date[0] != ""}>{row.date[0]}</td>
-              <td class:new-day={row.date[0] != ""}>{row.date[1]}</td>
+              <td class:new-day={row.date[0] != ""} on:mouseenter={() => setEditorString(i)}>{row.date[0]}</td>
+              <td class:new-day={row.date[0] != ""} on:mouseenter={() => setEditorString(i)}>{row.date[1]}</td>
               {#each row.fields as cell, j}
                 <td
                   class="field"
                   class:new-day={row.date[0] != ""}
                   on:click={() => handleClick(i, j)}
+                  on:mouseenter={() => setEditorString(i)}
                 >
                   <div>{cell}</div>
                 </td>
@@ -175,6 +185,13 @@
   h3 {
     margin: 4px;
   }
+  h3 + p {
+    margin: 4px;
+    margin-top: 0px;
+  }
+  br {
+    margin-top: 17px;
+  }
   .main {
     display: flex;
     flex-direction: row;
@@ -185,6 +202,7 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    padding-bottom: 28px;
   }
   .scroll-container {
     position: relative;
@@ -247,10 +265,6 @@
   }
   td:nth-child(-n + 2):hover ~ td.field {
     background-color: lightblue;
-  }
-  td:last-child,
-  th:last-child {
-    border-right: none;
   }
   td.field:hover {
     background-color: lightblue;

@@ -97,6 +97,9 @@
       fieldStates[row][col] = "none";
     }
   };
+  const preventDoubleClick = (e: MouseEvent): void => {
+    if (e.detail > 1) e.preventDefault();
+  }
   const addProfile = (e: KeyboardEvent): void => {
     const input = e.target;
     if (
@@ -126,7 +129,7 @@
 <div class="main">
   <div class="player-menu">
     <h3>Players</h3>
-    <br />
+    <p>Progress: </p>
     <div class="scroll-container">
       {#each playerList as player}
         <input
@@ -169,6 +172,7 @@
                 class:new-day={row.date[0] != ""}
                 class:edit={rowStates[i] === "edit"}
                 on:click={() => handleRowClick(i)}
+                on:mousedown={preventDoubleClick}
                 on:mouseenter={() => setEditorString(i)}
                 ><div>{row.date[0]}</div></td
               >
@@ -176,6 +180,7 @@
                 class:new-day={row.date[0] != ""}
                 class:edit={rowStates[i] === "edit"}
                 on:click={() => handleRowClick(i)}
+                on:mousedown={preventDoubleClick}
                 on:mouseenter={() => setEditorString(i)}
                 ><div>{row.date[1]}</div></td
               >
@@ -188,6 +193,7 @@
                   class:edit={fieldStates[i][j] === "edit"}
                   class:patch={fieldStates[i][j] === "patch"}
                   on:click={() => handleFieldClick(i, j)}
+                  on:mousedown={preventDoubleClick}
                   on:mouseenter={() => setEditorString(i)}
                 >
                   <div>{cell}</div>
@@ -230,9 +236,6 @@
   h3 + p {
     margin: 4px;
     margin-top: 0px;
-  }
-  br {
-    margin-top: 17px;
   }
   .main {
     display: flex;

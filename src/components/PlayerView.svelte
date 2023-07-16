@@ -21,7 +21,8 @@
     revs: [],
     editors: [],
   };
-  let entryStates: Array<Array<string>> = [];
+  let rowStates: Array<string> = [];
+  let fieldStates: Array<Array<string>> = [];
   let mounted = false;
   let editorString = "";
   const fetchPlayerScores = async (
@@ -46,7 +47,8 @@
       throw Error("error fetching player scores");
     }
     scoreInfo = await scoreFetch.json();
-    entryStates = scoreInfo.entries.map((row) => row.fields.map(() => ""));
+    rowStates = scoreInfo.entries.map(() => "none");
+    fieldStates = scoreInfo.entries.map((row) => row.fields.map(() => "none"));
   };
   const fetchPlayerList = async (sheetId: string): Promise<void> => {
     if (!mounted) return;
@@ -69,8 +71,31 @@
     }
     playerList = await playerListFetch.json();
   };
-  const handleClick = (row: number, col: number): void => {
-    return;
+  const handleRowClick = (row: number): void => {
+    // toggle entire row, cycle between "none" and "edit"
+    if (rowStates[row] === "none") {
+      rowStates[row] = "edit";
+      for (let i = 0; i < fieldStates[row].length; i++) {
+        fieldStates[row][i] = "edit";
+      }
+    } else {
+      rowStates[row] = "none";
+      for (let i = 0; i < fieldStates[row].length; i++) {
+        fieldStates[row][i] = "none";
+      }
+    }
+  };
+  const handleFieldClick = (row: number, col: number): void => {
+    // don't do anything if date is marked
+    if (rowStates[row] === "edit") return;
+    // toggle cell, cycle between "none", "edit", and "patch"
+    if (fieldStates[row]?.[col] === "none") {
+      fieldStates[row][col] = "edit";
+    } else if (fieldStates[row]?.[col] === "edit") {
+      fieldStates[row][col] = "patch";
+    } else {
+      fieldStates[row][col] = "none";
+    }
   };
   const addProfile = (e: KeyboardEvent): void => {
     const input = e.target;
@@ -101,7 +126,7 @@
 <div class="main">
   <div class="player-menu">
     <h3>Players</h3>
-    <br>
+    <br />
     <div class="scroll-container">
       {#each playerList as player}
         <input
@@ -140,14 +165,29 @@
         <tbody>
           {#each scoreInfo.entries as row, i}
             <tr>
-              <td class:new-day={row.date[0] != ""} on:mouseenter={() => setEditorString(i)}>{row.date[0]}</td>
-              <td class:new-day={row.date[0] != ""} on:mouseenter={() => setEditorString(i)}>{row.date[1]}</td>
+              <td
+                class:new-day={row.date[0] != ""}
+                class:edit={rowStates[i] === "edit"}
+                on:click={() => handleRowClick(i)}
+                on:mouseenter={() => setEditorString(i)}
+                ><div>{row.date[0]}</div></td
+              >
+              <td
+                class:new-day={row.date[0] != ""}
+                class:edit={rowStates[i] === "edit"}
+                on:click={() => handleRowClick(i)}
+                on:mouseenter={() => setEditorString(i)}
+                ><div>{row.date[1]}</div></td
+              >
               {#each row.fields as cell, j}
                 <td
                   class="field"
                   class:new-day={row.date[0] != ""}
-                  class:diff={i > 0 && scoreInfo.entries[i-1].fields[j] !== cell}
-                  on:click={() => handleClick(i, j)}
+                  class:diff={i > 0 &&
+                    scoreInfo.entries[i - 1].fields[j] !== cell}
+                  class:edit={fieldStates[i][j] === "edit"}
+                  class:patch={fieldStates[i][j] === "patch"}
+                  on:click={() => handleFieldClick(i, j)}
                   on:mouseenter={() => setEditorString(i)}
                 >
                   <div>{cell}</div>
@@ -253,7 +293,6 @@
     height: 18px; /* kinda bad but works for now */
   }
   td:nth-child(-n + 2) {
-    padding: 3px;
     border-right: 2px solid black;
   }
   th:nth-child(2) {
@@ -266,10 +305,10 @@
     border: none;
   }
   td:nth-child(-n + 2):hover ~ td.field {
-    background-color: lightblue;
+    background-color: rgba(0, 0, 0, 0.1);
   }
   td.field:hover {
-    background-color: lightblue;
+    background-color: rgba(0, 0, 0, 0.1);
   }
   td.new-day {
     border-top: 2px solid black;
@@ -281,16 +320,15 @@
     padding: 3px;
     height: 12px;
   }
-  td div.selected {
+  td.edit div {
     padding: 3px;
     height: 12px;
-    background: repeating-linear-gradient(
-      60deg,
-      rgba(255, 0, 0, 0.2),
-      rgba(255, 0, 0, 0.2) 2px,
-      rgba(255, 255, 255, 0) 2px,
-      rgba(255, 255, 255, 0) 6px
-    );
+    background: rgb(173, 216, 230, 0.5);
+  }
+  td.patch div {
+    padding: 3px;
+    height: 12px;
+    background: rgba(221, 160, 221, 0.5);
   }
   .bottom {
     border-top: 3px solid grey;
@@ -320,6 +358,7 @@
     text-overflow: ellipsis;
   }
   .diff {
-    background: rgb(151, 202, 114);
+    color: rgb(0, 128, 0);
+    font-weight: bold;
   }
 </style>

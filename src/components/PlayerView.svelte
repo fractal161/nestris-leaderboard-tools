@@ -21,6 +21,7 @@
     revs: [],
     editors: [],
   };
+  let entryStates: Array<Array<string>> = [];
   let mounted = false;
   let editorString = "";
   const fetchPlayerScores = async (
@@ -45,7 +46,7 @@
       throw Error("error fetching player scores");
     }
     scoreInfo = await scoreFetch.json();
-    // do something to set diff colors
+    entryStates = scoreInfo.entries.map((row) => row.fields.map(() => ""));
   };
   const fetchPlayerList = async (sheetId: string): Promise<void> => {
     if (!mounted) return;
@@ -145,6 +146,7 @@
                 <td
                   class="field"
                   class:new-day={row.date[0] != ""}
+                  class:diff={i > 0 && scoreInfo.entries[i-1].fields[j] !== cell}
                   on:click={() => handleClick(i, j)}
                   on:mouseenter={() => setEditorString(i)}
                 >
@@ -316,5 +318,8 @@
   .profiles option {
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .diff {
+    background: rgb(151, 202, 114);
   }
 </style>

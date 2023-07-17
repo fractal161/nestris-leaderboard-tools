@@ -72,15 +72,12 @@ export async function POST(req: RequestEvent): Promise<Response> {
   try {
     // parse arguments
     const { gid, player, profile, info } = await req.request.json();
-    console.log(gid);
-    console.log(player);
     const players = JSON.parse(
       (
         await fs.promises.readFile(`findings/sheets/${gid}/players/names.json`)
       ).toString(),
     );
     const pid = players[player];
-    console.log(JSON.stringify(info));
     try {
       // test if folder exists
       await fs.promises.access(`findings/sheets/${gid}/info`);

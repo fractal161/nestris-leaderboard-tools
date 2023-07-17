@@ -6,6 +6,8 @@
   // any future state that should be saved upon context switch should be
   // exported as a prop here, so the root page can bind to it.
   let playerList: Array<string> = [];
+  let confirmedPlayers: Array<boolean> = [];
+  let numConfirmed = 0;
   let activeProfiles: Array<string> = [];
   let selectedProfile: string | undefined = undefined;
   let scoreInfo: {
@@ -50,6 +52,8 @@
     scoreInfo = await scoreFetch.json();
     rowStates = scoreInfo.entries.map(() => "none");
     fieldStates = scoreInfo.entries.map((row) => row.fields.map(() => "none"));
+    activeProfiles = [];
+    selectedProfile = undefined;
   };
   const fetchPlayerList = async (sheetId: string): Promise<void> => {
     if (!mounted) return;
@@ -67,11 +71,14 @@
         },
       },
     );
-    selectedPlayer = undefined;
     if (playerListFetch.status !== 200) {
       throw Error("error fetching player list");
     }
-    playerList = await playerListFetch.json();
+    selectedPlayer = undefined;
+    const data = await playerListFetch.json();
+    playerList = data.players;
+    confirmedPlayers = data.confirmed;
+    numConfirmed = confirmedPlayers.reduce((sum, value) => sum + (value ? 1 : 0), 0);
   };
   const handleRowClick = (row: number): void => {
     // toggle entire row, cycle between "none" and "edit"
@@ -127,7 +134,6 @@
       alert("No profile selected!");
       return;
     }
-    console.log(selectedProfile);
     // loop through row states and field states, construct profiles
     const allInfo: { [key: number]: Array<ProfileChunk> } = {};
     for (let i = 0; i < rowStates.length; i++) {
@@ -186,6 +192,10 @@
     if (writeProfileFetch.status !== 200) {
       alert("error writing profiles");
     }
+    // mark corresponding row as confirmed
+    const playerIndex = playerList.indexOf(selectedPlayer);
+    confirmedPlayers[playerIndex] = true;
+    numConfirmed = confirmedPlayers.reduce((sum, value) => sum + (value ? 1 : 0), 0);
   };
   onMount(async () => {
     mounted = true;
@@ -200,9 +210,9 @@
 <div class="main">
   <div class="player-menu">
     <h3>Players</h3>
-    <p>Progress: ---/{playerList.length}</p>
+    <p>Progress: {numConfirmed}/{playerList.length}</p>
     <div class="scroll-container">
-      {#each playerList as player}
+      {#each playerList as player, i}
         <input
           type="radio"
           bind:group={selectedPlayer}
@@ -210,7 +220,7 @@
           id={player}
           value={player}
         />
-        <label class="player-option" for={player}>{player}</label>
+        <label class="player-option" class:confirmed={confirmedPlayers[i]} for={player}>{player}</label>
       {/each}
     </div>
   </div>
@@ -348,6 +358,9 @@
   }
   .player-option:hover {
     background-color: lightgrey;
+  }
+  .confirmed {
+    background-color: rgb(151, 202, 114);
   }
   .scroll-container input[type="radio"]:checked + label {
     background-color: lightblue;

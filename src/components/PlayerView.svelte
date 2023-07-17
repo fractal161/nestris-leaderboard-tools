@@ -18,16 +18,19 @@
     }>;
     editors: Array<Array<string>>;
     revs: Array<number>;
+    profiles: { [key: string]: { [key: string]: Array<ProfileChunk> } };
   } = {
     headers: [],
     entries: [],
     revs: [],
     editors: [],
+    profiles: {},
   };
   let rowStates: Array<string> = [];
   let fieldStates: Array<Array<string>> = [];
   let mounted = false;
   let editorString = "";
+  let addInputText = "";
   const fetchPlayerScores = async (
     selectedPlayer: string | undefined,
   ): Promise<void> => {
@@ -50,10 +53,44 @@
       throw Error("error fetching player scores");
     }
     scoreInfo = await scoreFetch.json();
+    activeProfiles = Object.keys(scoreInfo.profiles);
+    selectedProfile = activeProfiles.length > 0 ? activeProfiles[0] : undefined;
+    addInputText = activeProfiles.length > 0 ? "" : selectedPlayer;
+    loadProfile(selectedProfile);
+  };
+  const loadProfile = (profileName: string | undefined): void => {
     rowStates = scoreInfo.entries.map(() => "none");
     fieldStates = scoreInfo.entries.map((row) => row.fields.map(() => "none"));
-    activeProfiles = [];
-    selectedProfile = undefined;
+    if (profileName === undefined) return;
+    const profile = scoreInfo.profiles[profileName];
+    for (const rev in profile) {
+      const revNum = parseInt(rev);
+      const rowIndex = scoreInfo.revs.indexOf(revNum);
+      if (rowIndex === -1) throw Error("shouldn't happen");
+      const chunks = profile[rev];
+      for (const chunk of chunks) {
+        const { type, values } = chunk;
+        if (type === "UPDATE") {
+          rowStates[rowIndex] = "edit";
+          for (const header in values) {
+            const colIndex = scoreInfo.headers.indexOf(header);
+            fieldStates[rowIndex][colIndex] = "edit";
+          }
+        }
+        else {
+          for (const header in values) {
+            const colIndex = scoreInfo.headers.indexOf(header);
+            if (colIndex === -1) throw Error("shouldn't happen");
+            if (type === "EDIT") {
+              fieldStates[rowIndex][colIndex] = "edit";
+            }
+            if (type === "PATCH") {
+              fieldStates[rowIndex][colIndex] = "patch";
+            }
+          }
+        }
+      }
+    }
   };
   const fetchPlayerList = async (sheetId: string): Promise<void> => {
     if (!mounted) return;
@@ -78,7 +115,10 @@
     const data = await playerListFetch.json();
     playerList = data.players;
     confirmedPlayers = data.confirmed;
-    numConfirmed = confirmedPlayers.reduce((sum, value) => sum + (value ? 1 : 0), 0);
+    numConfirmed = confirmedPlayers.reduce(
+      (sum, value) => sum + (value ? 1 : 0),
+      0,
+    );
   };
   const handleRowClick = (row: number): void => {
     // toggle entire row, cycle between "none" and "edit"
@@ -95,8 +135,6 @@
     }
   };
   const handleFieldClick = (row: number, col: number): void => {
-    // don't do anything if date is marked
-    if (rowStates[row] === "edit") return;
     // toggle cell, cycle between "none", "edit", and "patch"
     if (fieldStates[row]?.[col] === "none") {
       fieldStates[row][col] = "edit";
@@ -116,9 +154,15 @@
       e.key === "Enter" &&
       !activeProfiles.includes(input.value)
     ) {
-      if (activeProfiles.length === 0) selectedProfile = input.value;
       activeProfiles = [...activeProfiles, input.value];
+      selectedProfile = input.value;
       input.value = "";
+      if (activeProfiles.length > 1) {
+        // in this case, a profile already exists, and thus the board should
+        // be wiped.
+        scoreInfo.profiles[selectedProfile] = {};
+        loadProfile(selectedProfile);
+      }
     }
   };
   const setEditorString = (i: number): void => {
@@ -145,7 +189,9 @@
           values: {} as { [key: string]: string },
         };
         for (let j = 0; j < fieldStates[i].length; j++) {
-          chunk.values[scoreInfo.headers[j]] = scoreInfo.entries[i].fields[j];
+          if (fieldStates[i][j] !== "none") {
+            chunk.values[scoreInfo.headers[j]] = scoreInfo.entries[i].fields[j];
+          }
         }
         allInfo[rev] = [chunk];
       } else {
@@ -192,10 +238,15 @@
     if (writeProfileFetch.status !== 200) {
       alert("error writing profiles");
     }
+    // update saved state
+    scoreInfo.profiles[selectedProfile] = allInfo;
     // mark corresponding row as confirmed
     const playerIndex = playerList.indexOf(selectedPlayer);
     confirmedPlayers[playerIndex] = true;
-    numConfirmed = confirmedPlayers.reduce((sum, value) => sum + (value ? 1 : 0), 0);
+    numConfirmed = confirmedPlayers.reduce(
+      (sum, value) => sum + (value ? 1 : 0),
+      0,
+    );
   };
   onMount(async () => {
     mounted = true;
@@ -205,6 +256,7 @@
   });
   $: fetchPlayerList(sheetId);
   $: fetchPlayerScores(selectedPlayer);
+  $: loadProfile(selectedProfile);
 </script>
 
 <div class="main">
@@ -220,7 +272,11 @@
           id={player}
           value={player}
         />
-        <label class="player-option" class:confirmed={confirmedPlayers[i]} for={player}>{player}</label>
+        <label
+          class="player-option"
+          class:confirmed={confirmedPlayers[i]}
+          for={player}>{player}</label
+        >
       {/each}
     </div>
   </div>
@@ -292,6 +348,7 @@
           type="text"
           id="new-profile"
           name="new-profile"
+          bind:value={addInputText}
           on:keypress={addProfile}
         />
       </div>

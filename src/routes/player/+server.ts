@@ -51,6 +51,17 @@ export async function GET(req: RequestEvent): Promise<Response> {
       // update editors
       editors.push(timestamp["editors"]);
     }
+    // attempt to fetch existing profiles
+    let profiles: { [key: string]: { [key: string]: Array<ProfileChunk> } };
+    try {
+      profiles = JSON.parse(
+        (
+          await fs.promises.readFile(`findings/sheets/${sheet}/info/${id}.json`)
+        ).toString(),
+      );
+    } catch (e) {
+      profiles = {};
+    }
     return json({
       headers: headers.slice(1),
       entries: fields.map((row, i) => {
@@ -61,6 +72,7 @@ export async function GET(req: RequestEvent): Promise<Response> {
       }),
       editors: editors,
       revs: revs,
+      profiles: profiles,
     });
   } catch (err) {
     console.error(err);

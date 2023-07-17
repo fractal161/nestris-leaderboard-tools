@@ -97,6 +97,12 @@ export async function POST(req: RequestEvent): Promise<Response> {
       // create folder if it doesn't exist
       await fs.promises.mkdir(`findings/sheets/${gid}/info`);
     }
+    // if profile or info is null, this means that the player should be ignored
+    if (profile === null || info === null) {
+      await fs.promises.writeFile(`findings/sheets/${gid}/info/${pid}.json`, "{}");
+      return new Response("good");
+    }
+    //
     try {
       // if file already exists, attempt to update it
       const existingProfiles = JSON.parse(

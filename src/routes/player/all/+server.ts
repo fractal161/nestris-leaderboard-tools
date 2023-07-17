@@ -16,16 +16,27 @@ export async function GET(req: RequestEvent): Promise<Response> {
       ).toString(),
     );
     const players = Object.keys(playerMap);
-    const confirmed: Array<boolean> = [];
+    const confirmed: Array<string> = [];
     for (const player of players) {
       // check if file already exists
       const id = playerMap[player];
       try {
         await fs.promises.access(`findings/sheets/${sheet}/info/${id}.json`);
-        // if here, then the file does exist
-        confirmed.push(true);
+        // now, open the file and check if it's empty
+        const profiles = JSON.parse(
+          (
+            await fs.promises.readFile(
+              `findings/sheets/${sheet}/info/${id}.json`,
+            )
+          ).toString(),
+        );
+        if (Object.keys(profiles).length === 0) {
+          confirmed.push("ignored");
+        } else {
+          confirmed.push("confirmed");
+        }
       } catch (err) {
-        confirmed.push(false);
+        confirmed.push("none");
       }
     }
     return json({

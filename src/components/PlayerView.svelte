@@ -6,7 +6,7 @@
   // any future state that should be saved upon context switch should be
   // exported as a prop here, so the root page can bind to it.
   let playerList: Array<string> = [];
-  let confirmedPlayers: Array<boolean> = [];
+  let confirmedPlayers: Array<string> = [];
   let numConfirmed = 0;
   let activeProfiles: Array<string> = [];
   let selectedProfile: string | undefined = undefined;
@@ -76,8 +76,7 @@
             const colIndex = scoreInfo.headers.indexOf(header);
             fieldStates[rowIndex][colIndex] = "edit";
           }
-        }
-        else {
+        } else {
           for (const header in values) {
             const colIndex = scoreInfo.headers.indexOf(header);
             if (colIndex === -1) throw Error("shouldn't happen");
@@ -116,7 +115,7 @@
     playerList = data.players;
     confirmedPlayers = data.confirmed;
     numConfirmed = confirmedPlayers.reduce(
-      (sum, value) => sum + (value ? 1 : 0),
+      (sum, state) => sum + (state === "none" ? 0 : 1),
       0,
     );
   };
@@ -242,9 +241,34 @@
     scoreInfo.profiles[selectedProfile] = allInfo;
     // mark corresponding row as confirmed
     const playerIndex = playerList.indexOf(selectedPlayer);
-    confirmedPlayers[playerIndex] = true;
+    confirmedPlayers[playerIndex] = "confirmed";
     numConfirmed = confirmedPlayers.reduce(
-      (sum, value) => sum + (value ? 1 : 0),
+      (sum, state) => sum + (state === "none" ? 0 : 1),
+      0,
+    );
+  };
+  const ignorePlayer = async (): Promise<void> => {
+    if (selectedPlayer === undefined) return;
+    const data = {
+      gid: sheetId,
+      player: selectedPlayer,
+      profile: null,
+      info: null,
+    }
+    const ignorePlayerFetch = await fetch("/player", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    if (ignorePlayerFetch.status !== 200) {
+      alert("error writing profiles");
+    }
+    const playerIndex = playerList.indexOf(selectedPlayer);
+    confirmedPlayers[playerIndex] = "ignored";
+    numConfirmed = confirmedPlayers.reduce(
+      (sum, state) => sum + (state === "none" ? 0 : 1),
       0,
     );
   };
@@ -273,7 +297,8 @@
         />
         <label
           class="player-option"
-          class:confirmed={confirmedPlayers[i]}
+          class:confirmed={confirmedPlayers[i] === "confirmed"}
+          class:ignored={confirmedPlayers[i] === "ignored"}
           for={player}>{player}</label
         >
       {/each}
@@ -353,7 +378,11 @@
       </div>
       <div class="profile-box">
         Profile:
-        <select class="profiles" bind:value={selectedProfile} on:change={() => loadProfile(selectedProfile)}>
+        <select
+          class="profiles"
+          bind:value={selectedProfile}
+          on:change={() => loadProfile(selectedProfile)}
+        >
           {#each activeProfiles as prof}
             <option value={prof}>
               {prof}
@@ -361,7 +390,7 @@
           {/each}
         </select>
       </div>
-      <button type="button">Ignore</button>
+      <button type="button" on:click={ignorePlayer}>Ignore</button>
       <button type="button" on:click={writeProfile}>Confirm</button>
     </div>
   </div>
@@ -417,6 +446,9 @@
   }
   .confirmed {
     background-color: rgb(151, 202, 114);
+  }
+  .ignored {
+    background-color: rgb(239, 95, 107);
   }
   .scroll-container input[type="radio"]:checked + label {
     background-color: lightblue;

@@ -256,7 +256,6 @@
   });
   $: fetchPlayerList(sheetId);
   $: fetchPlayerScores(selectedPlayer);
-  $: loadProfile(selectedProfile);
 </script>
 
 <div class="main">
@@ -354,7 +353,7 @@
       </div>
       <div class="profile-box">
         Profile:
-        <select class="profiles" bind:value={selectedProfile}>
+        <select class="profiles" bind:value={selectedProfile} on:change={() => loadProfile(selectedProfile)}>
           {#each activeProfiles as prof}
             <option value={prof}>
               {prof}

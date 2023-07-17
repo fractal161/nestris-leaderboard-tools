@@ -254,7 +254,7 @@
       player: selectedPlayer,
       profile: null,
       info: null,
-    }
+    };
     const ignorePlayerFetch = await fetch("/player", {
       method: "POST",
       headers: {

@@ -44,3 +44,8 @@ export type SheetDiff = {
     added: RowDiff;
   }>;
 };
+
+export type ProfileChunk = {
+  type: "UPDATE" | "PATCH" | "EDIT";
+  values: { [key: string]: string };
+};

@@ -4,6 +4,7 @@ import { error, json } from "@sveltejs/kit";
 import assert from "node:assert";
 import { parseCsvFile } from "$lib/util";
 import { formatTime, formatDay } from "$lib/format";
+import type { ProfileChunk } from "$types/client";
 
 const timestamps = JSON.parse(
   fs.readFileSync("data/timestamps.json").toString(),
@@ -61,6 +62,56 @@ export async function GET(req: RequestEvent): Promise<Response> {
       editors: editors,
       revs: revs,
     });
+  } catch (err) {
+    console.error(err);
+    throw error(404, "bad");
+  }
+}
+
+export async function POST(req: RequestEvent): Promise<Response> {
+  try {
+    // parse arguments
+    const { gid, player, profile, info } = await req.request.json();
+    console.log(gid);
+    console.log(player);
+    const players = JSON.parse(
+      (
+        await fs.promises.readFile(`findings/sheets/${gid}/players/names.json`)
+      ).toString(),
+    );
+    const pid = players[player];
+    console.log(JSON.stringify(info));
+    try {
+      // test if folder exists
+      await fs.promises.access(`findings/sheets/${gid}/info`);
+    } catch (err) {
+      // create folder if it doesn't exist
+      await fs.promises.mkdir(`findings/sheets/${gid}/info`);
+    }
+    try {
+      // if file already exists, attempt to update it
+      const existingProfiles = JSON.parse(
+        (
+          await fs.promises.readFile(`findings/sheets/${gid}/info/${pid}.json`)
+        ).toString(),
+      );
+      existingProfiles[profile] = info;
+      await fs.promises.writeFile(
+        `findings/sheets/${gid}/info/${pid}.json`,
+        JSON.stringify(existingProfiles, null, 2),
+      );
+    } catch (err) {
+      // otherwise, create it
+      const profiles: {
+        [key: string]: { [key: number]: Array<ProfileChunk> };
+      } = {};
+      profiles[profile] = info;
+      await fs.promises.writeFile(
+        `findings/sheets/${gid}/info/${pid}.json`,
+        JSON.stringify(profiles, null, 2),
+      );
+    }
+    return new Response("good");
   } catch (err) {
     console.error(err);
     throw error(404, "bad");

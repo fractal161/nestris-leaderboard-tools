@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import type { ProfileChunk } from "$types/client";
   export let sheetId: string;
   export let selectedPlayer: string | undefined = undefined;
   // any future state that should be saved upon context switch should be
@@ -66,6 +67,7 @@
         },
       },
     );
+    selectedPlayer = undefined;
     if (playerListFetch.status !== 200) {
       throw Error("error fetching player list");
     }
@@ -99,7 +101,7 @@
   };
   const preventDoubleClick = (e: MouseEvent): void => {
     if (e.detail > 1) e.preventDefault();
-  }
+  };
   const addProfile = (e: KeyboardEvent): void => {
     const input = e.target;
     if (
@@ -116,6 +118,75 @@
     const editors = scoreInfo.editors[i];
     editorString = editors.join(", ");
   };
+  const writeProfile = async (): Promise<void> => {
+    if (selectedPlayer === undefined) {
+      alert("No player selected!");
+      return;
+    }
+    if (selectedProfile === undefined || selectedProfile === null) {
+      alert("No profile selected!");
+      return;
+    }
+    console.log(selectedProfile);
+    // loop through row states and field states, construct profiles
+    const allInfo: { [key: number]: Array<ProfileChunk> } = {};
+    for (let i = 0; i < rowStates.length; i++) {
+      const rev = scoreInfo.revs[i];
+      if (rowStates[i] === "edit") {
+        // add entire row
+        const chunk: ProfileChunk = {
+          type: "UPDATE",
+          values: {} as { [key: string]: string },
+        };
+        for (let j = 0; j < fieldStates[i].length; j++) {
+          chunk.values[scoreInfo.headers[j]] = scoreInfo.entries[i].fields[j];
+        }
+        allInfo[rev] = [chunk];
+      } else {
+        // loop through all headers
+        const chunks: Array<ProfileChunk> = [];
+        for (let j = 0; j < fieldStates[i].length; j++) {
+          if (fieldStates[i][j] === "edit") {
+            const values: { [key: string]: string } = {};
+            values[scoreInfo.headers[j]] = scoreInfo.entries[i].fields[j];
+            chunks.push({
+              type: "EDIT",
+              values: values,
+            });
+          } else if (fieldStates[i][j] === "patch") {
+            const values: { [key: string]: string } = {};
+            values[scoreInfo.headers[j]] = scoreInfo.entries[i].fields[j];
+            chunks.push({
+              type: "PATCH",
+              values: values,
+            });
+          }
+        }
+        if (chunks.length > 0) {
+          allInfo[rev] = chunks;
+        }
+      }
+    }
+    if (Object.keys(allInfo).length === 0) {
+      alert("Cannot confirm blank submission - use 'Ignore' instead.");
+    }
+    const data = {
+      gid: sheetId,
+      player: selectedPlayer,
+      profile: selectedProfile,
+      info: allInfo,
+    };
+    const writeProfileFetch = await fetch("/player", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    if (writeProfileFetch.status !== 200) {
+      alert("error writing profiles");
+    }
+  };
   onMount(async () => {
     mounted = true;
     console.log("PlayerView mounted");
@@ -129,7 +200,7 @@
 <div class="main">
   <div class="player-menu">
     <h3>Players</h3>
-    <p>Progress: </p>
+    <p>Progress: ---/{playerList.length}</p>
     <div class="scroll-container">
       {#each playerList as player}
         <input
@@ -224,7 +295,8 @@
           {/each}
         </select>
       </div>
-      <button type="button">Confirm</button>
+      <button type="button">Ignore</button>
+      <button type="button" on:click={writeProfile}>Confirm</button>
     </div>
   </div>
 </div>
@@ -246,7 +318,7 @@
     border: 1px solid grey;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 2;
     padding-bottom: 28px;
   }
   .scroll-container {
@@ -260,7 +332,7 @@
     border: 1px solid grey;
     display: flex;
     flex-direction: column;
-    flex: 5;
+    flex: 9;
     min-width: 0px;
   }
   .player-option {
